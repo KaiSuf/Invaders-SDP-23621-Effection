@@ -1332,4 +1332,19 @@ public final class DrawManager {
 		if (effect != null)
 			effect.draw(backBuffer, backBufferGraphics);
 	}
+
+	
+	/**
+	 * Draws the points shown when enemies are destroyed.
+	 * AUTHORED BY: VFX TEAM (Effection)
+	 * Any further inquiries please contact us.
+	 *
+	 * @param screen Screen to draw on.
+	 * @param effect Points effect to draw.
+	 */
+	public void drawPointsEffect(final Screen screen,
+			final PointsEffect effect) {
+		if (effect != null)
+			effect.draw(backBufferGraphics, screen.getWidth(), fontRegular);
+	}
 }

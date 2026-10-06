@@ -24,6 +24,7 @@ import engine.DamageDimEffect;
 import engine.GameEvents;
 import engine.GlitchEffect;
 import engine.ScreenShake;
+import engine.PointsEffect;
 import entity.Bullet;
 import entity.BulletPool;
 import entity.Coin;
@@ -176,6 +177,8 @@ public class GameScreen extends Screen {
 	private GlitchEffect glitch;
 	/** Screen shake when an enemy is destroyed. */
 	private ScreenShake screenShake;
+	/** Points shown when enemies are destroyed. AUTHORED BY: VFX TEAM (Effection) */
+	private PointsEffect pointsEffect;
 	/** Diamonds earned this run but not yet cashed out; lost on death,
 	 * banked into DiamondManager only when the player cashes out. */
 	private int pendingDiamonds;
@@ -242,6 +245,7 @@ public class GameScreen extends Screen {
 		GameEvents.subscribe(GameEvents.Type.PLAYER_HIT, this.damageDim);
 		this.glitch = new GlitchEffect();
 		this.screenShake = new ScreenShake();
+		this.pointsEffect = new PointsEffect(SEPARATION_LINE_HEIGHT);
 		this.coins = new HashSet<Coin>();
 		this.achievementPopupQueue = new LinkedList<Achievement>();
 		this.coinDropManager = new CoinDropManager();
@@ -593,6 +597,9 @@ public class GameScreen extends Screen {
 		// HUD must stay still: remove shake offset.
 		drawManager.setWorldOffset(0, 0);
 
+		// Points popups (above the dim, under the HUD). AUTHORED BY: VFX TEAM (Effection)
+		drawManager.drawPointsEffect(this, this.pointsEffect);
+
 		// Interface.
 		drawManager.drawScore(this, this.score);
 		drawManager.drawLives(this, this.lives);
@@ -703,6 +710,10 @@ public class GameScreen extends Screen {
 						spawnSparkles(enemyShip); // AUTHORED BY: VFX TEAM (Effection)
 						this.enemyShipFormation.destroy(enemyShip);
 						this.screenShake.trigger();
+						// Points popup. AUTHORED BY: VFX TEAM (Effection)
+						this.pointsEffect.spawn(enemyShip.getPositionX() + enemyShip.getWidth() / 2,
+								enemyShip.getPositionY() + enemyShip.getHeight() / 2,
+								enemyShip.getPointValue());
 						maybeDropCoin(enemyShip);
 						this.items.onEnemyDefeated(enemyShip, false);
 						showUnlockedAchievement(Core.getAchievementManager()
@@ -717,6 +728,11 @@ public class GameScreen extends Screen {
 					spawnSparkles(this.enemyShipSpecial); // AUTHORED BY: VFX TEAM (Effection)
 					this.enemyShipSpecial.destroy();
 					this.screenShake.trigger();
+					// Bonus points popup. AUTHORED BY: VFX TEAM (Effection)
+					this.pointsEffect.spawnBonus(
+						this.enemyShipSpecial.getPositionX() + this.enemyShipSpecial.getWidth() / 2,
+						this.enemyShipSpecial.getPositionY() + this.enemyShipSpecial.getHeight() / 2,
+						this.enemyShipSpecial.getPointValue());
 					dropCoin(this.enemyShipSpecial, BONUS_COIN_VALUE);
 					this.items.onEnemyDefeated(this.enemyShipSpecial, true);
 					showUnlockedAchievement(Core.getAchievementManager()
