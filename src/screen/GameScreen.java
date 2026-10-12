@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.LinkedList;
 import java.util.Queue;
+import java.util.Random;
 import java.util.Set;
 
 import engine.CoinDropManager;
@@ -23,15 +24,18 @@ import engine.Achievement;
 import engine.DamageDimEffect;
 import engine.GameEvents;
 import engine.GlitchEffect;
+import engine.MeteorSpawner;
 import engine.ScreenShake;
 import engine.PointsEffect;
 import entity.Bullet;
 import entity.BulletPool;
 import entity.Coin;
 import entity.CoinPool;
+import entity.DiamondDrop;
 import entity.EnemyShip;
 import entity.EnemyShipFormation;
 import entity.Entity;
+import entity.Meteor;
 import entity.Particle;
 import entity.Ship;
 import item.ItemSystem;
@@ -144,6 +148,12 @@ public class GameScreen extends Screen {
 		}
 	}
 
+	// Bonus meteor flight band. AUTHORED BY: VFX TEAM (Effection)
+	/** Space kept below the HUD line at the meteor's highest start. */
+	private static final int METEOR_TOP_MARGIN = 4;
+	/** Space kept above the player ship at the end of the meteor's fall. */
+	private static final int METEOR_PLAYER_MARGIN = 30;
+
 	/** Current game difficulty settings. */
 	private GameSettings gameSettings;
 	/** Current difficulty level number. */
@@ -223,8 +233,18 @@ public class GameScreen extends Screen {
 	private GlitchEffect glitch;
 	/** Screen shake when an enemy is destroyed. */
 	private ScreenShake screenShake;
+<<<<<<< HEAD
 	/** Points shown when enemies are destroyed. AUTHORED BY: VFX TEAM (Effection) */
 	private PointsEffect pointsEffect;
+=======
+
+	/** Decides when the bonus meteor appears. AUTHORED BY: VFX TEAM (Effection) */
+	private MeteorSpawner meteorSpawner;
+	/** Bonus meteor on screen (flying or bursting), null when none. */
+	private Meteor meteor;
+	/** Diamonds dropped by shot meteors, falling until caught or lost. */
+	private List<DiamondDrop> diamondDrops = new ArrayList<DiamondDrop>();
+>>>>>>> c7b2346 (feat: add meteor that drops a catchable diamond)
 	/** Diamonds earned this run but not yet cashed out; lost on death,
 	 * banked into DiamondManager only when the player cashes out. */
 	private int pendingDiamonds;
@@ -319,7 +339,11 @@ public class GameScreen extends Screen {
 		GameEvents.subscribe(GameEvents.Type.PLAYER_HIT, this.damageDim);
 		this.glitch = new GlitchEffect();
 		this.screenShake = new ScreenShake();
+<<<<<<< HEAD
 		this.pointsEffect = new PointsEffect(SEPARATION_LINE_HEIGHT);
+=======
+		this.meteorSpawner = MeteorSpawner.forLevel(this.level);
+>>>>>>> c7b2346 (feat: add meteor that drops a catchable diamond)
 		this.coins = new HashSet<Coin>();
 		this.achievementPopupQueue = new LinkedList<Achievement>();
 		this.coinDropManager = new CoinDropManager();
@@ -448,6 +472,12 @@ public class GameScreen extends Screen {
 				this.enemyShipFormation.update();
 			this.enemyShipFormation.shoot(this.bullets);
 			/**
+			 * AUTHORED BY: VFX TEAM (effection): Bonus meteor appears and flies across the screen.
+			 */
+
+			trySpawnMeteor();
+
+			/**
 			 * AUTHORED BY: VFX TEAM (effection)
 			 *
 			 * Ship blinks when lives remain 1.
@@ -464,6 +494,8 @@ public class GameScreen extends Screen {
 		cleanBullets();
 		updateParticles(); // AUTHORED BY: VFX TEAM (Effection)
 		updateCoins();
+		updateMeteor(); // AUTHORED BY: VFX TEAM (Effection) : Bonus meteor flies across the screen, bursts and drops a diamond.
+		updateDiamondDrops(); // AUTHORED BY: VFX TEAM (Effection) : Diamonds dropped by shot meteors fall until caught or lost.
 		handleItemEvents();
 		updateAchievementPopup();
 		draw();
@@ -487,6 +519,7 @@ public class GameScreen extends Screen {
 			if (this.enemyShipFormation.isEmpty() && this.lives > 0) {
 				this.pendingDiamonds += this.level;
 				collectRemainingCoins();
+				collectRemainingDiamondDrops();
 				showUnlockedAchievement(Core.getAchievementManager()
 						.recordLevelCompleted(this.level));
 
@@ -519,6 +552,9 @@ public class GameScreen extends Screen {
 
 		BulletPool.recycle(this.bullets);
 		this.bullets.clear();
+		// Authored by: VFX TEAM (Effection): No bonus meteor or falling diamond during the game over animation.
+		this.meteor = null;
+		this.diamondDrops.clear();
 
 		// Clears explosions left from enemies shot just before.
 		this.enemyShipFormation.removeDestroyed();
@@ -745,6 +781,7 @@ public class GameScreen extends Screen {
 			// Damage dim (under HUD, so score/lives stay bright). AUTHORED BY: VFX TEAM (Effection)
 			drawManager.drawDamageDim(this, this.damageDim);
 
+<<<<<<< HEAD
 			// Coins are part of the game world, so they shake too.
 			drawManager.setWorldOffset(this.screenShake.getOffsetX(),
 					this.screenShake.getOffsetY());
@@ -758,6 +795,34 @@ public class GameScreen extends Screen {
 
 		// Points popups (above the dim, under the HUD). AUTHORED BY: VFX TEAM (Effection)
 		drawManager.drawPointsEffect(this, this.pointsEffect);
+=======
+		for (Bullet bullet : this.bullets)
+			drawManager.drawEntity(bullet, bullet.getPositionX(),
+					bullet.getPositionY());
+		// Bonus meteor. AUTHORED BY: VFX TEAM (Effection)
+		if (this.meteor != null)
+			drawManager.drawMeteor(this.meteor);
+
+		// Stop shake offset before full-screen dim.
+		drawManager.setWorldOffset(0, 0);
+		// Damage dim (under HUD, so score/lives stay bright). AUTHORED BY: VFX TEAM (Effection)
+		drawManager.drawDamageDim(this, this.damageDim);
+
+		// Coins are part of the game world, so they shake too.
+		drawManager.setWorldOffset(this.screenShake.getOffsetX(),
+				this.screenShake.getOffsetY());
+		for (Coin coin : this.coins)
+			drawManager.drawCoin(coin, coin.getPositionX(),
+					coin.getPositionY());
+
+		// Falling meteor diamonds. AUTHORED BY: VFX TEAM (Effection)
+		for (DiamondDrop drop : this.diamondDrops)
+			drawManager.drawDiamondDrop(drop);
+
+		drawManager.drawItemDrops(this.items); // Item System (Team CS)
+		// HUD must stay still: remove shake offset.
+		drawManager.setWorldOffset(0, 0);
+>>>>>>> c7b2346 (feat: add meteor that drops a catchable diamond)
 
 		// Interface.
 		drawManager.drawScore(this, this.score);
@@ -925,6 +990,22 @@ public class GameScreen extends Screen {
 					this.enemyShipSpecialExplosionCooldown.reset();
 					recyclable.add(bullet);
 				}
+				// Bonus meteor: only player bullets can hit it.
+				// AUTHORED BY: VFX TEAM (Effection)
+				if (this.meteor != null && !this.meteor.isBursting()
+						&& !recyclable.contains(bullet)
+						&& checkCollision(bullet, this.meteor)) {
+					this.meteor.burst();
+					// It drops a diamond the player has to catch.
+					this.diamondDrops.add(new DiamondDrop(
+							this.meteor.getPositionX() + this.meteor.getWidth() / 2,
+							this.meteor.getPositionY() + this.meteor.getHeight() / 2,
+							this.meteor.getDiamondValue(),
+							this.meteor.getSpeedX(), this.width));
+					this.logger.info("Meteor shot, dropped "
+							+ this.meteor.getDiamondValue() + " diamonds");
+					recyclable.add(bullet);
+				}
 			}
 		this.bullets.removeAll(recyclable);
 		BulletPool.recycle(recyclable);
@@ -997,6 +1078,107 @@ public class GameScreen extends Screen {
 				+ CurrencyManager.getInstance().getCoins());
 		CoinPool.recycle(this.coins);
 		this.coins.clear();
+	}
+
+	/**
+	 * Asks the spawner whether the bonus meteor should appear and, if so,
+	 * sends it in on a random path: random side, angle, curve, height and
+	 * speed, so the player can't predict it. The whole path always ends
+	 * above the player. Only called during normal gameplay.
+	 * AUTHORED BY: VFX TEAM (Effection)
+	 */
+	private void trySpawnMeteor() {
+		int enemiesLeft = 0;
+		for (EnemyShip enemyShip : this.enemyShipFormation)
+			if (!enemyShip.isDestroyed())
+				enemiesLeft++;
+
+		long now = System.currentTimeMillis();
+		if (!this.meteorSpawner.shouldSpawn(now, enemiesLeft,
+				this.meteor != null))
+			return;
+
+		// Random path for this meteor.
+		double startAngle = this.meteorSpawner.rollStartAngle();
+		double endAngle = this.meteorSpawner.rollEndAngle(startAngle);
+
+		// The path must fit between the HUD line and the space above the
+		// player; if it falls too much, make it flatter just enough to fit.
+		int topY = SEPARATION_LINE_HEIGHT + METEOR_TOP_MARGIN;
+		int bottomY = this.ship.getPositionY() - METEOR_PLAYER_MARGIN
+				- Meteor.SIZE;
+		int room = bottomY - topY;
+		int drop = Meteor.getTotalDrop(this.width, startAngle, endAngle);
+		if (drop > room) {
+			double scale = (double) room / drop;
+			startAngle = Math.toDegrees(Math.atan(scale
+					* Math.tan(Math.toRadians(startAngle))));
+			endAngle = Math.toDegrees(Math.atan(scale
+					* Math.tan(Math.toRadians(endAngle))));
+			drop = Meteor.getTotalDrop(this.width, startAngle, endAngle);
+		}
+		int maxStartY = Math.max(topY, bottomY - drop);
+
+		this.meteor = new Meteor(this.meteorSpawner.rollFromLeft(),
+				this.meteorSpawner.rollHeight(topY, maxStartY), this.width,
+				this.meteorSpawner.getCrossTime(), startAngle, endAngle,
+				this.meteorSpawner.getDiamondValue(), new Random());
+		this.meteorSpawner.markSpawned(now);
+		this.logger.info("A meteor appears");
+	}
+	/**
+	 * Moves the bonus meteor and removes it once it leaves the screen or
+	 * its burst has finished playing.
+	 * AUTHORED BY: VFX TEAM (Effection)
+	 */
+	private void updateMeteor() {
+		if (this.meteor == null)
+			return;
+		this.meteor.update();
+		if (this.meteor.isOffScreen(this.width)) {
+			this.meteor = null;
+			this.logger.info("The meteor has passed");
+		} else if (this.meteor.isBurstFinished()) {
+			this.meteor = null;
+		}
+	}
+
+	/**
+	 * Moves the diamonds dropped by meteors. A diamond touched by the ship
+	 * is added to the run's pending diamonds (banked on cash-out or at the
+	 * end of the game, lost if the player dies, like level-clear diamonds);
+	 * one that falls off the screen is lost.
+	 * AUTHORED BY: VFX TEAM (Effection)
+	 */
+	private void updateDiamondDrops() {
+		Iterator<DiamondDrop> it = this.diamondDrops.iterator();
+		while (it.hasNext()) {
+			DiamondDrop drop = it.next();
+			drop.update();
+			if (!drop.isCaught() && this.lives > 0
+					&& !this.ship.isDestroyed()
+					&& checkCollision(drop, this.ship)) {
+				drop.catchIt();
+				this.pendingDiamonds += drop.getValue();
+				this.logger.info("Meteor diamond caught, +" + drop.getValue()
+						+ " pending diamonds, now " + this.pendingDiamonds);
+			} else if (drop.isFinished()
+					|| (!drop.isCaught() && drop.getPositionY() > this.height)) {
+				it.remove();
+			}
+		}
+	}
+
+	/**
+	 * Gives the player any meteor diamonds still falling when the level is
+	 * cleared, the same way leftover coins are collected.
+	 * AUTHORED BY: VFX TEAM (Effection)
+	 */
+	private void collectRemainingDiamondDrops() {
+		for (DiamondDrop drop : this.diamondDrops)
+			if (!drop.isCaught())
+				this.pendingDiamonds += drop.getValue();
+		this.diamondDrops.clear();
 	}
 
 	/**

@@ -19,7 +19,9 @@ import screen.MenuItem;
 import screen.Screen;
 import screen.Starfield;
 import entity.Coin;
+import entity.DiamondDrop;
 import entity.Entity;
+import entity.Meteor;
 import entity.Particle;
 import entity.Ship;
 import item.ItemAPI;
@@ -367,6 +369,303 @@ public final class DrawManager {
 		backBufferGraphics.setColor(coin.getColor());
 		backBufferGraphics.fillOval(positionX, positionY, coin.getWidth(),
 				coin.getHeight());
+	}
+
+	// Bonus meteor drawing. AUTHORED BY: VFX TEAM (Effection)
+	/**
+	 * Meteor rock surface, 9x9 cells of 2 px: # rock, o crater, . empty.
+	 * The lumpy outline and craters rotate as the rock spins; light and
+	 * shadow are added when drawing, so they stay fixed (lit from the
+	 * top left) like on a real tumbling rock.
+	 */
+	private static final String[] METEOR_SHAPE = {
+			"...###...",
+			".######..",
+			".##o####.",
+			"###oo####",
+			"####o####",
+			"##o######",
+			".#####o#.",
+			"..#####..",
+			"...###..." };
+	/** Center cell of the meteor shape. */
+	private static final int METEOR_MID = 4;
+	/** Lit side of the rock. */
+	private static final Color METEOR_HIGHLIGHT = new Color(176, 150, 128);
+	/** Main rock color. */
+	private static final Color METEOR_ROCK = new Color(124, 100, 84);
+	/** Shaded side of the rock. */
+	private static final Color METEOR_SHADOW = new Color(78, 60, 52);
+	/** Crater color. */
+	private static final Color METEOR_CRATER = new Color(52, 40, 36);
+	/** Hot glowing rim on the meteor's leading side. */
+	private static final Color METEOR_RIM = new Color(255, 150, 60);
+	/** Flame colors: white-hot core, yellow, orange, red edge. */
+	private static final Color[] METEOR_FLAME = { new Color(255, 250, 220),
+			new Color(255, 225, 90), new Color(255, 150, 40),
+			new Color(220, 60, 30) };
+	/** Random source for the flame flicker. */
+	private static final java.util.Random FLICKER = new java.util.Random();
+
+	/**
+	 * Draws the bonus meteor: the flying rock with its glow and flame
+	 * tail, or its burst once shot.
+	 *
+	 * @param meteor
+	 *            Meteor to draw.
+	 */
+	public void drawMeteor(final Meteor meteor) {
+		if (meteor.isBursting())
+			drawMeteorBurst(meteor);
+		else
+			drawMeteorFlying(meteor);
+		((Graphics2D) backBufferGraphics).setComposite(AlphaComposite.SrcOver);
+	}
+
+	/**
+	 * Sets the transparency of everything drawn next.
+	 *
+	 * @param alpha
+	 *            Opacity, 0 (invisible) to 1 (solid).
+	 */
+	private void setMeteorAlpha(final float alpha) {
+		((Graphics2D) backBufferGraphics).setComposite(AlphaComposite
+				.getInstance(AlphaComposite.SRC_OVER,
+						Math.max(0f, Math.min(1f, alpha))));
+	}
+
+	/**
+	 * Draws a flying meteor: embers, layered flame tail, pulsing glow and
+	 * the shaded pixel rock with a hot leading edge.
+	 *
+	 * @param meteor
+	 *            Meteor to draw.
+	 */
+	private void drawMeteorFlying(final Meteor meteor) {
+		int x = meteor.getPositionX();
+		int y = meteor.getPositionY();
+		int size = meteor.getWidth();
+		int dir = meteor.getDirection();
+		float slope = meteor.getFallSlope();
+		int centerX = x + size / 2;
+		int centerY = y + size / 2;
+		long now = System.currentTimeMillis();
+
+		// Tail: one column of flame cells every 2 px, going back along the
+		// flight path (up and behind). Each column has a white-hot middle,
+		// yellow and orange layers, and a red edge; it narrows and fades
+		// with distance and flickers every frame.
+		int tailLength = 16 + FLICKER.nextInt(5);
+		for (int i = 0; i < tailLength; i++) {
+			float t = (float) i / tailLength;
+			int back = size / 2 - 2 + i * 2;
+			int cellX = centerX - dir * back;
+			int cellY = centerY - 1 - Math.round(slope * back);
+			int half = Math.max(0, Math.round(5 * (1f - t)));
+			for (int j = -half; j <= half; j++) {
+				if (FLICKER.nextFloat() > 0.95f - t * 0.55f)
+					continue;
+				// 0 = middle of the flame, 1 = its edge, shifted to cooler
+				// colors further from the rock.
+				float edge = half == 0 ? 1f : (float) Math.abs(j) / half;
+				int layer = Math.min(METEOR_FLAME.length - 1,
+						(int) (edge * 2 + t * 2.2f));
+				setMeteorAlpha(0.95f * (1f - t * 0.85f));
+				backBufferGraphics.setColor(METEOR_FLAME[layer]);
+				backBufferGraphics.fillRect(cellX,
+						cellY + j * 2 + FLICKER.nextInt(2) - 1, 2, 2);
+			}
+		}
+
+		// Embers: a few loose sparks drifting behind the tail.
+		for (int i = 0; i < 4; i++) {
+			int back = size / 2 + 10 + FLICKER.nextInt(tailLength * 2 + 10);
+			setMeteorAlpha(0.3f + FLICKER.nextFloat() * 0.5f);
+			backBufferGraphics.setColor(METEOR_FLAME[1 + FLICKER.nextInt(3)]);
+			backBufferGraphics.fillRect(centerX - dir * back,
+					centerY - Math.round(slope * back) + FLICKER.nextInt(13) - 6,
+					2, 2);
+		}
+
+		// Heat glow: a soft warm halo that gently pulses.
+		float pulse = 0.5f + 0.5f * (float) Math.sin(now / 90.0);
+		backBufferGraphics.setColor(METEOR_FLAME[1]);
+		setMeteorAlpha(0.12f + 0.08f * pulse);
+		backBufferGraphics.fillOval(x - 3, y - 3, size + 6, size + 6);
+		setMeteorAlpha(1f);
+
+		// Spinning pixel rock. Each screen cell looks up which surface cell
+		// has rotated into it; shading comes from the cell's place on
+		// screen. The edge facing the travel direction (and the bottom, as
+		// it falls) glows hot from entering the atmosphere.
+		float cos = (float) Math.cos(meteor.getRotation());
+		float sin = (float) Math.sin(meteor.getRotation());
+		for (int row = 0; row < METEOR_SHAPE.length; row++)
+			for (int col = 0; col < METEOR_SHAPE.length; col++) {
+				char cell = meteorCellAt(row, col, cos, sin);
+				if (cell == '.')
+					continue;
+				boolean leading = meteorCellAt(row, col + dir, cos, sin) == '.';
+				if (slope > 0.5f)
+					leading = leading
+							|| meteorCellAt(row + 1, col, cos, sin) == '.';
+				int light = (col - METEOR_MID) + (row - METEOR_MID);
+				Color color;
+				if (leading)
+					color = pulse > 0.5f ? METEOR_FLAME[1] : METEOR_RIM;
+				else if (cell == 'o')
+					color = METEOR_CRATER;
+				else if (light <= -3)
+					color = METEOR_HIGHLIGHT;
+				else if (light >= 3)
+					color = METEOR_SHADOW;
+				else
+					color = METEOR_ROCK;
+				backBufferGraphics.setColor(color);
+				backBufferGraphics.fillRect(x + col * 2, y + row * 2, 2, 2);
+			}
+	}
+	/**
+	 * Finds which cell of the rock surface is shown at a screen cell when
+	 * the rock is rotated.
+	 *
+	 * @param row
+	 *            Screen cell row inside the meteor.
+	 * @param col
+	 *            Screen cell column inside the meteor.
+	 * @param cos
+	 *            Cosine of the rock's rotation.
+	 * @param sin
+	 *            Sine of the rock's rotation.
+	 * @return Surface cell ('#', 'o') or '.' when empty or outside.
+	 */
+	private char meteorCellAt(final int row, final int col, final float cos,
+			final float sin) {
+		int dx = col - METEOR_MID;
+		int dy = row - METEOR_MID;
+		// Rotate backwards to find where this cell came from.
+		int srcCol = METEOR_MID + Math.round(cos * dx + sin * dy);
+		int srcRow = METEOR_MID + Math.round(-sin * dx + cos * dy);
+		if (srcRow < 0 || srcRow >= METEOR_SHAPE.length || srcCol < 0
+				|| srcCol >= METEOR_SHAPE[srcRow].length())
+			return '.';
+		return METEOR_SHAPE[srcRow].charAt(srcCol);
+	}
+
+	/**
+	 * Draws a diamond dropped by a meteor: a twinkling cyan gem falling
+	 * down, or a "+N" popup floating up once the player has caught it.
+	 *
+	 * @param drop
+	 *            Diamond drop to draw.
+	 */
+	public void drawDiamondDrop(final DiamondDrop drop) {
+		Graphics2D g2d = (Graphics2D) backBufferGraphics;
+		int x = drop.getPositionX();
+		int y = drop.getPositionY();
+		int size = drop.getWidth();
+		int centerX = x + size / 2;
+
+		if (drop.isCaught()) {
+			float progress = Math.min(1f,
+					(float) drop.getCaughtElapsed() / DiamondDrop.POPUP_DURATION);
+			String popup = "+" + drop.getValue();
+			backBufferGraphics.setFont(fontRegular);
+			int textX = centerX - fontRegularMetrics.stringWidth(popup) / 2;
+			int textY = y - (int) (progress * 28);
+			setMeteorAlpha(1f - progress * progress);
+			backBufferGraphics.setColor(Color.BLACK);
+			for (int ox = -1; ox <= 1; ox++)
+				for (int oy = -1; oy <= 1; oy++)
+					if (ox != 0 || oy != 0)
+						backBufferGraphics.drawString(popup, textX + ox,
+								textY + oy);
+			backBufferGraphics.setColor(Color.CYAN);
+			backBufferGraphics.drawString(popup, textX, textY);
+			g2d.setComposite(AlphaComposite.SrcOver);
+			return;
+		}
+
+		// Soft pulsing glow so it stands out while it falls.
+		float pulse = 0.5f + 0.5f * (float) Math.sin(drop.getAge() / 120.0);
+		backBufferGraphics.setColor(Color.CYAN);
+		setMeteorAlpha(0.15f + 0.15f * pulse);
+		backBufferGraphics.fillOval(x - 4, y - 4, size + 8, size + 8);
+		g2d.setComposite(AlphaComposite.SrcOver);
+
+		// Gem: a cyan diamond with a darker lower half and a white sparkle.
+		int[] gemX = { centerX, x + size, centerX, x };
+		int[] gemY = { y, y + size / 2, y + size, y + size / 2 };
+		backBufferGraphics.setColor(new Color(0, 170, 200));
+		backBufferGraphics.fillPolygon(gemX, gemY, 4);
+		backBufferGraphics.setColor(Color.CYAN);
+		backBufferGraphics.fillPolygon(new int[] { centerX, x + size, x },
+				new int[] { y, y + size / 2, y + size / 2 }, 3);
+		backBufferGraphics.setColor(Color.WHITE);
+		backBufferGraphics.drawPolygon(gemX, gemY, 4);
+		if (pulse > 0.6f)
+			backBufferGraphics.fillRect(centerX - 3, y + 3, 2, 2);
+	}
+
+	/**
+	 * Draws a shot meteor: a flash, an expanding shockwave ring, rock
+	 * pieces falling away and spark streaks. (Its diamond falls separately,
+	 * see drawDiamondDrop.)
+	 *
+	 * @param meteor
+	 *            Meteor to draw.
+	 */
+	private void drawMeteorBurst(final Meteor meteor) {
+		long elapsed = meteor.getBurstElapsed();
+		float progress = Math.min(1f, (float) elapsed / Meteor.BURST_DURATION);
+		float fade = 1f - progress;
+		int centerX = meteor.getPositionX() + meteor.getWidth() / 2;
+		int centerY = meteor.getPositionY() + meteor.getHeight() / 2;
+
+		// Flash at the moment of impact.
+		if (progress < 0.15f) {
+			int radius = 6 + (int) (progress * 70);
+			setMeteorAlpha(0.85f * (1f - progress / 0.15f));
+			backBufferGraphics.setColor(METEOR_FLAME[0]);
+			backBufferGraphics.fillOval(centerX - radius, centerY - radius,
+					radius * 2, radius * 2);
+		}
+
+		// Shockwave ring growing outward.
+		if (progress < 0.5f) {
+			int radius = 8 + (int) (progress * 2 * 34);
+			setMeteorAlpha(0.7f * (1f - progress * 2));
+			backBufferGraphics.setColor(METEOR_FLAME[2]);
+			backBufferGraphics.drawOval(centerX - radius, centerY - radius,
+					radius * 2, radius * 2);
+		}
+
+		// Rock pieces: half the sparks are slower chunks that fall.
+		for (int i = 0; i < meteor.getSparkCount(); i += 2) {
+			float dx = meteor.getSparkSpeedX(i) * 0.45f * elapsed;
+			float dy = meteor.getSparkSpeedY(i) * 0.45f * elapsed
+					+ 0.00006f * elapsed * elapsed;
+			setMeteorAlpha(fade * 1.3f);
+			backBufferGraphics.setColor(i % 4 == 0 ? METEOR_ROCK
+					: METEOR_SHADOW);
+			backBufferGraphics.fillRect(centerX + Math.round(dx) - 2,
+					centerY + Math.round(dy) - 2, 4, 4);
+		}
+
+		// Sparks: short streaks flying outward, yellow turning red.
+		backBufferGraphics.setColor(METEOR_FLAME[Math.min(
+				METEOR_FLAME.length - 1, 1 + (int) (progress * 3))]);
+		setMeteorAlpha(fade);
+		for (int i = 1; i < meteor.getSparkCount(); i += 2) {
+			float speedX = meteor.getSparkSpeedX(i);
+			float speedY = meteor.getSparkSpeedY(i);
+			int headX = centerX + Math.round(speedX * elapsed);
+			int headY = centerY + Math.round(speedY * elapsed);
+			int tailX = centerX + Math.round(speedX * elapsed * 0.7f);
+			int tailY = centerY + Math.round(speedY * elapsed * 0.7f);
+			backBufferGraphics.drawLine(tailX, tailY, headX, headY);
+			backBufferGraphics.fillRect(headX - 1, headY - 1, 2, 2);
+		}
 	}
 
 	/**
