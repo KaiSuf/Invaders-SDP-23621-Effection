@@ -335,6 +335,7 @@ public class EnemyShipFormation implements Iterable<EnemyShip> {
 	 * Bounds are measured from living ships only: destroyed ships stay in
 	 * their column until their fade finishes, but they no longer count
 	 * toward the formation's size, so they can't make it bounce early.
+	 * AUTHORED BY: VFX TEAM (Effection)
 	 */
 	private void cleanUp() {
 		// Remove every empty column at once. (indexOf() can't be used here:
