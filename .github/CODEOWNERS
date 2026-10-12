@@ -38,7 +38,14 @@
 # /src/engine/GameSettings.java        @1322528197ldy-tech
 
 # Team 6, Effection, Visual Effects
-# @KaiSuf
+/src/engine/DamageDimEffect.java     @KaiSuf
+/src/engine/GlitchEffect.java        @KaiSuf
+/src/engine/ScreenShake.java         @KaiSuf
+/src/engine/GameEvents.java          @KaiSuf
+/src/entity/Particle.java            @KaiSuf
+/res/silkscreen/                     @KaiSuf
+/teams/Effection.md                  @KaiSuf
+/teams/Git-Workflow/Effection_Git-Workflow.md  @KaiSuf
 
 # Team 7, Mantis, Records and Achievements
 # /src/engine/Achievement.java         @Adiboba
