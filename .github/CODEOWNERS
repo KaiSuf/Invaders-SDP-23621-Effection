@@ -39,8 +39,8 @@
 
 # Team 6, Effection, Visual Effects
 /src/engine/DamageDimEffect.java     @KaiSuf
-/src/engine/GlitchEffect.java        @KaiSuf
-/src/engine/ScreenShake.java         @KaiSuf
+/src/engine/GlitchEffect.java        @alyafths @KaiSuf
+/src/engine/ScreenShake.java         @alyafths @KaiSuf
 /src/engine/GameEvents.java          @KaiSuf
 /src/entity/Particle.java            @KaiSuf @dianpines
 /teams/Effection.md                  @KaiSuf
