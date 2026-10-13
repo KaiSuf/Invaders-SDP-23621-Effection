@@ -43,6 +43,7 @@
 /src/engine/ScreenShake.java         @alyafths @KaiSuf
 /src/engine/GameEvents.java          @KaiSuf
 /src/entity/Particle.java            @KaiSuf @dianpines
+/src/engine/PointsEffect.java        @deluluclover @KaiSuf
 /teams/Effection.md                  @KaiSuf
 /teams/Git-Workflow/Effection_Git-Workflow.md  @KaiSuf
 
