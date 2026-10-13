@@ -23,6 +23,7 @@ import engine.Achievement;
 import engine.DamageDimEffect;
 import engine.GameEvents;
 import engine.GlitchEffect;
+import engine.MuzzleFlash;
 import engine.ScreenShake;
 import engine.PointsEffect;
 import entity.Bullet;
@@ -223,6 +224,10 @@ public class GameScreen extends Screen {
 	private GlitchEffect glitch;
 	/** Screen shake when an enemy is destroyed. */
 	private ScreenShake screenShake;
+	/** Flash at the gun when the player shoots. AUTHORED BY: VFX TEAM (Effection) */
+	private MuzzleFlash muzzleFlash;
+	/** Shots count at last frame, for muzzle flash. */
+	private int lastBulletsShot;
 	/** Points shown when enemies are destroyed. AUTHORED BY: VFX TEAM (Effection) */
 	private PointsEffect pointsEffect;
 	/** Diamonds earned this run but not yet cashed out; lost on death,
@@ -314,6 +319,8 @@ public class GameScreen extends Screen {
 		this.prevLives = this.lives;
 		this.lowHealthActive = false;
 		this.bullets = new HashSet<Bullet>();
+		this.muzzleFlash = new MuzzleFlash();
+		this.lastBulletsShot = this.bulletsShot;
 		this.damageDim = new DamageDimEffect(900, 0.75f,
         new java.awt.Color(150, 0, 0));  //new update dim effect
 		GameEvents.subscribe(GameEvents.Type.PLAYER_HIT, this.damageDim);
@@ -422,6 +429,9 @@ public class GameScreen extends Screen {
 					if (this.ship.shoot(this.bullets))
 						this.bulletsShot++;
 				useItemSlots(); // Item System (Team CS)
+				if (this.bulletsShot > this.lastBulletsShot)
+					this.muzzleFlash.trigger();
+				this.lastBulletsShot = this.bulletsShot;
 			}
 
 			if (this.enemyShipSpecial != null) {
