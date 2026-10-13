@@ -756,8 +756,11 @@ public class GameScreen extends Screen {
 			drawManager.setWorldOffset(0, 0);
 		}
 
-		// Points popups (above the dim, under the HUD). AUTHORED BY: VFX TEAM (Effection)
-		drawManager.drawPointsEffect(this, this.pointsEffect);
+		// Hit sparkles: drawn while the shake offset is applied so they move
+		// with the game world, and clipped to the play area so they never
+		// cover the HUD. AUTHORED BY: VFX TEAM (Effection)
+		drawManager.drawParticles(this, this.particles,
+				SEPARATION_LINE_HEIGHT);
 
 		// Points popups (above the dim, under the HUD). AUTHORED BY: VFX TEAM (Effection)
 		drawManager.drawPointsEffect(this, this.pointsEffect);
