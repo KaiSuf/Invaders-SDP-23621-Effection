@@ -759,6 +759,9 @@ public class GameScreen extends Screen {
 		// Points popups (above the dim, under the HUD). AUTHORED BY: VFX TEAM (Effection)
 		drawManager.drawPointsEffect(this, this.pointsEffect);
 
+		// Points popups (above the dim, under the HUD). AUTHORED BY: VFX TEAM (Effection)
+		drawManager.drawPointsEffect(this, this.pointsEffect);
+
 		// Interface.
 		drawManager.drawScore(this, this.score);
 		drawManager.drawLives(this, this.lives);
