@@ -63,8 +63,9 @@ public class ScreenShake {
     public void update() {
         this.offsetX = 0;
         this.offsetY = 0;
-        if (!this.active)
+        if (!this.active) {
             return;
+        }
 
         long elapsed = System.currentTimeMillis() - this.startTime;
         if (elapsed >= this.duration) {
