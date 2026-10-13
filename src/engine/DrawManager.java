@@ -1578,6 +1578,21 @@ public final class DrawManager {
 	}
 
 	/**
+	 * Draws the muzzle flash at the ship gun tip.
+	 * AUTHORED BY: VFX TEAM (Effection)
+	 *
+	 * @param flash Muzzle flash effect.
+	 * @param ship  Player ship.
+	 */
+	public void drawMuzzleFlash(final MuzzleFlash flash, final Ship ship) {
+		if (flash == null || ship == null || ship.isDestroyed())
+			return;
+		flash.draw(backBufferGraphics,
+				ship.getPositionX() + ship.getWidth() / 2,
+				ship.getPositionY() - 2);
+	}
+
+	/**
 	 * Draws the low-health glitch effect.
 	 * AUTHORED BY: VFX TEAM (Effection)
 	 *Any further inquiries please contact us.

@@ -734,6 +734,8 @@ public class GameScreen extends Screen {
 			drawManager.drawEntity(this.ship, this.ship.getPositionX(),
 					this.ship.getPositionY());
 			drawManager.drawItemShield(this.ship, this.items); // Item System (Team CS)
+			// Muzzle flash at gun tip. AUTHORED BY: VFX TEAM (Effection)
+			drawManager.drawMuzzleFlash(this.muzzleFlash, this.ship);
 			if (this.enemyShipSpecial != null)
 				drawManager.drawEntity(this.enemyShipSpecial,
 						this.enemyShipSpecial.getPositionX(),
