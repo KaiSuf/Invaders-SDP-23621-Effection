@@ -3,13 +3,15 @@ package engine;
 import java.util.Random;
 
 /**
- * AUTHORED BY: VFX TEAM (Effection)
- *
- * Short screen shake when the player destroys an enemy.
- * The shake starts at full power and fades to 0 over the duration.
- * A new trigger restarts the shake. It does not add power,
+ * Short screen shake when the player destroys an enemy ship
+ * or the special ship.
+ * The shake moves the game world by up to 5 px for 200 ms.
+ * It starts at full power and fades to 0. The HUD does not shake.
+ * A new kill restarts the shake. It does not add power,
  * so many kills in a row give a light shake that does not grow.
+ * AUTHORED BY: VFX TEAM (Effection)
  */
+
 public class ScreenShake {
 
     /** Default max offset in pixels. */
