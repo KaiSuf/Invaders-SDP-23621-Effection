@@ -50,7 +50,9 @@ public class ShopScreen extends Screen {
 		/** Item team upgrades. */
 		UPGRADES("Upgrades", new Color(255, 200, 0)),
 		/** Today's discounts. */
-		NIGHT_MARKET("Night Mkt", new Color(255, 80, 255));
+		NIGHT_MARKET("Night Mkt", new Color(255, 80, 255)),
+		/** Placeholder for visual effects. */
+		EFFECTS("Effects", new Color(255, 140, 0));
 
 		/** Text on the tab. */
 		private final String title;
@@ -303,6 +305,9 @@ public class ShopScreen extends Screen {
 			break;
 		case UPGRADES:
 			addAll(result, ShopCatalog.getByCategory(ShopCategory.UPGRADE));
+			break;
+		case EFFECTS:
+			// Empty placeholder; effects are not sold yet.
 			break;
 		default:
 			for (ShopItem item : NightMarket.getListings())
