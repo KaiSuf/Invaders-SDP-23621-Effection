@@ -194,6 +194,7 @@ coins
 diamonds
 coins.tmp
 diamonds.tmp
+shope-owned
 
 # Equipped items the player owns, written at runtime (Item System)
 /equipment
