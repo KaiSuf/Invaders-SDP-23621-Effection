@@ -1614,6 +1614,19 @@ public final class DrawManager {
 	}
 
 	/**
+	 * Draws the comet trail behind a player bullet.
+	 * AUTHORED BY: VFX TEAM (Effection)
+	 *
+	 * @param bullet Player bullet.
+	 */
+	public void drawBulletTrail(final Entity bullet) {
+		if (bullet != null)
+			BulletTrail.draw(backBufferGraphics, bullet.getPositionX(),
+					bullet.getPositionY(), bullet.getWidth(),
+					bullet.getHeight());
+	}
+
+	/**
 	 * Draws the low-health glitch effect.
 	 * AUTHORED BY: VFX TEAM (Effection)
 	 *Any further inquiries please contact us.
