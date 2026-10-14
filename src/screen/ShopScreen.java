@@ -23,8 +23,9 @@ import shop.ShopItem;
 import shop.Skin;
 
 /**
- * The shop (GoG - Currency System). Four tabs: Ships, Skins, Upgrades and
- * the Night Market. The left side lists what is for sale, the right side
+ * The shop (GoG - Currency System). Five tabs: Ships, Skins, Upgrades,
+ * Night Market and an empty Effects placeholder.
+ * The left side lists what is for sale, the right side
  * shows the selected entry with its price and BUY buttons.
  *
  * Skins and upgrades can be paid with coins or diamonds, so they get one
