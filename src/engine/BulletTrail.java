@@ -12,13 +12,14 @@ public final class BulletTrail {
 
     /** Trail colours, hot to cool. */
     private static final Color[] COLORS = {
-            new Color(255, 214, 64), new Color(255, 170, 40),
-            new Color(255, 140, 26), new Color(224, 80, 26),
-            new Color(168, 50, 14) };
+			new Color(255, 240, 150), new Color(255, 205, 60),
+			new Color(255, 165, 30), new Color(255, 135, 20),
+			new Color(250, 105, 10), new Color(230, 75, 10),
+			new Color(190, 45, 5) };
     /** Height of one trail block in pixels. */
     private static final int SEGMENT = 4;
     /** Glow colour around the bullet. */
-    private static final Color GLOW = new Color(255, 176, 64, 80);
+    private static final Color GLOW = new Color(255, 150, 40, 90);
 
     /** Not instantiable. */
     private BulletTrail() {
