@@ -20,6 +20,10 @@ public final class BulletTrail {
     private static final int SEGMENT = 4;
     /** Glow colour around the bullet. */
     private static final Color GLOW = new Color(255, 150, 40, 90);
+    /** Ember colour. */
+	private static final Color EMBER = new Color(255, 120, 20);
+	/** Max embers per frame. */
+	private static final int EMBERS = 3;
 
     /** Not instantiable. */
     private BulletTrail() {
