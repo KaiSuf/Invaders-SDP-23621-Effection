@@ -332,45 +332,41 @@ public class EnemyShipFormation implements Iterable<EnemyShip> {
 
 	/**
 	 * Cleans empty columns, adjusts the width and height of the formation.
+	 * Bounds are measured from living ships only: destroyed ships stay in
+	 * their column until their fade finishes, but they no longer count
+	 * toward the formation's size, so they can't make it bounce early.
+	 * AUTHORED BY: VFX TEAM (Effection)
 	 */
 	private void cleanUp() {
-		Set<Integer> emptyColumns = new HashSet<Integer>();
-		int maxColumn = 0;
-		int minPositionY = Integer.MAX_VALUE;
-		for (List<EnemyShip> column : this.enemyShips) {
-			if (!column.isEmpty()) {
-				// Height of this column
-				int columnSize = column.get(column.size() - 1).positionY
-						- this.positionY + this.shipHeight;
-				maxColumn = Math.max(maxColumn, columnSize);
-				minPositionY = Math.min(minPositionY, column.get(0)
-						.getPositionY());
-			} else {
-				// Empty column, we remove it.
-				emptyColumns.add(this.enemyShips.indexOf(column));
-			}
-		}
-		for (int index : emptyColumns) {
-			this.enemyShips.remove(index);
-			logger.info("Removed column " + index);
-		}
+		// Remove every empty column at once. (indexOf() can't be used here:
+		// all empty lists are equal, so it always finds the first one.)
+		if (this.enemyShips.removeIf(List::isEmpty))
+			logger.info("Removed empty columns, " + this.enemyShips.size()
+					+ " left");
 
-		int leftMostPoint = 0;
-		int rightMostPoint = 0;
-		
-		for (List<EnemyShip> column : this.enemyShips) {
-			if (!column.isEmpty()) {
-				if (leftMostPoint == 0)
-					leftMostPoint = column.get(0).getPositionX();
-				rightMostPoint = column.get(0).getPositionX();
+		int leftMostPoint = Integer.MAX_VALUE;
+		int rightMostPoint = Integer.MIN_VALUE;
+		int topMostPoint = Integer.MAX_VALUE;
+		int bottomMostPoint = Integer.MIN_VALUE;
+		for (List<EnemyShip> column : this.enemyShips)
+			for (EnemyShip ship : column) {
+				if (ship == null || ship.isDestroyed())
+					continue;
+				leftMostPoint = Math.min(leftMostPoint, ship.getPositionX());
+				rightMostPoint = Math.max(rightMostPoint, ship.getPositionX());
+				topMostPoint = Math.min(topMostPoint, ship.getPositionY());
+				bottomMostPoint = Math.max(bottomMostPoint,
+						ship.getPositionY());
 			}
-		}
+
+		// Only fading ships left: keep the last bounds, the level is over.
+		if (leftMostPoint == Integer.MAX_VALUE)
+			return;
 
 		this.width = rightMostPoint - leftMostPoint + this.shipWidth;
-		this.height = maxColumn;
-
+		this.height = bottomMostPoint - topMostPoint + this.shipHeight;
 		this.positionX = leftMostPoint;
-		this.positionY = minPositionY;
+		this.positionY = topMostPoint;
 	}
 
 	/**
