@@ -6,13 +6,14 @@ import java.awt.image.BufferedImage;
 import java.util.Random;
 
 /**
- * Glitch effect for low player health.
- * While enabled: shows light scanlines all the time, and short random
- * "bursts" that shift horizontal slices of the screen, add red/cyan
- * lines and noise blocks.
+ * Glitch effect for the player's last life.
+ * When lives go from 2 to 1, GameScreen turns this effect on for 5 seconds.
+ * It also stops early if the player gains a life or the level ends.
+ * While on, it shows light scanlines all the time. At random times it
+ * also shows short "bursts": horizontal slices of the screen move,
+ * and red/cyan lines and noise blocks appear.
+ * The effect draws over the game and the HUD.
  * AUTHORED BY: VFX TEAM (Effection)
- * Any further inquiries please contact us.
- * Team Effection - Visual Effects.
  */
 public class GlitchEffect {
 

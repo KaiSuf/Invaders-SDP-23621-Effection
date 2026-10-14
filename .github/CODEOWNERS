@@ -16,20 +16,20 @@
 # and add what is missing. The handle is your fork owner from the README table.
 
 # Team 1, Hanyang Space, Sound Effects
-# /src/engine/SoundManager.java        @AyeJay21
+/src/engine/SoundManager.java        @AyeJay21
 
 # Team 2, A1, Player and Enemy Ship Variety
-# /src/entity/Ship.java                @calzsvg
-# /src/entity/EnemyShip.java           @calzsvg
-# /src/entity/EnemyShipFormation.java  @calzsvg
+/src/entity/Ship.java                @calzsvg
+/src/entity/EnemyShip.java           @calzsvg
+/src/entity/EnemyShipFormation.java  @calzsvg
 
 # Team 3, GOG, Currency System
-# /src/engine/CurrencyManager.java     @wamos0922
-# /src/engine/DiamondManager.java      @wamos0922
-# /src/engine/CoinDropManager.java     @wamos0922
-# /src/entity/Coin.java                @wamos0922
-# /src/entity/CoinPool.java            @wamos0922
-# /src/screen/CashOutScreen.java       @wamos0922
+/src/engine/CurrencyManager.java     @wamos0922
+/src/engine/DiamondManager.java      @wamos0922
+/src/engine/CoinDropManager.java     @wamos0922
+/src/entity/Coin.java                @wamos0922
+/src/entity/CoinPool.java            @wamos0922
+/src/screen/CashOutScreen.java       @wamos0922
 
 # Team 4, ECE, Gameplay HUD
 # @Rochdgrvrn
@@ -48,12 +48,12 @@
 /teams/Git-Workflow/Effection_Git-Workflow.md  @KaiSuf
 
 # Team 7, Mantis, Records and Achievements
-# /src/engine/Achievement.java         @Adiboba
-# /src/engine/AchievementManager.java  @Adiboba
-# /src/engine/Score.java               @Adiboba
-# /src/engine/PlayerProfile.java       @Adiboba
-# /src/screen/HighScoreScreen.java     @Adiboba
-# /src/screen/ScoreScreen.java         @Adiboba
+/src/engine/Achievement.java         @Adiboba
+/src/engine/AchievementManager.java  @Adiboba
+/src/engine/Score.java               @Adiboba
+/src/engine/PlayerProfile.java       @Adiboba
+/src/screen/HighScoreScreen.java     @Adiboba
+/src/screen/ScoreScreen.java         @Adiboba
 
 # Team 8, Team CS, Item System
 # @doha1208
