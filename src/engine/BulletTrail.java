@@ -38,17 +38,30 @@ public final class BulletTrail {
                             final int width, final int height) {
         if (g == null)
             return;
-        g.setColor(GLOW);
-        g.fillRect(x - 2, y - 2, width + 4, height + 4);
-        int centerX = x + width / 2;
-        for (int i = 1; i <= COLORS.length; i++) {
-            Color base = COLORS[i - 1];
-            int alpha = (int) (200 * (1f - i / (COLORS.length + 1f)));
-            int w = Math.max(2, width - i);
-            g.setColor(new Color(base.getRed(), base.getGreen(),
-                    base.getBlue(), alpha));
-            g.fillRect(centerX - w / 2, y + height + (i - 1) * SEGMENT, w,
-                    SEGMENT);
+        int n = COLORS.length;
+		int centerX = x + width / 2;
+
+		// Glow around the bullet.
+		g.setColor(GLOW);
+		g.fillRect(x - 3, y - 3, width + 6, height + 6);
+
+		// Flame: wide orange outer layer + thin bright core.
+		for (int i = 0; i < n; i++) {
+			float k = i / (float) n;
+			int ty = y + height - 2 + i * SEGMENT;
+			int flicker = (int) (Math.random() * 3) - 1;
+			int outerW = Math.max(2, (int) ((width + 4) * (1f - k)) + flicker);
+			int innerW = Math.max(1, outerW / 2);
+			Color outer = COLORS[Math.min(i + 1, n - 1)];
+			Color inner = COLORS[i];
+			g.setColor(alpha(outer, (int) (170 * (1f - k))));
+			g.fillRect(centerX - outerW / 2 + flicker, ty, outerW, SEGMENT);
+			g.setColor(alpha(inner, (int) (230 * (1f - k))));
+			g.fillRect(centerX - innerW / 2, ty, innerW, SEGMENT);
         }
     }
+    private static Color alpha(final Color c, final int a) {
+		return new Color(c.getRed(), c.getGreen(), c.getBlue(),
+				Math.max(0, Math.min(255, a)));
+	}
 }
