@@ -1,7 +1,10 @@
 package engine;
 
+import java.awt.Color;
 import java.util.ArrayDeque;
 import java.util.Iterator;
+
+import entity.Ship;
 
 /**
  * Ghost Trail ship effect (shop item "effect_ghost_trail"). While the
@@ -13,6 +16,13 @@ public final class GhostTrail {
 
 	/** How many past positions are remembered (one per frame). */
 	private static final int HISTORY = 17;
+    /** How many frames back each ghost is drawn, nearest first. */
+	private static final int[] GHOST_FRAMES = { 4, 8, 12, 16 };
+	/** Opacity of each ghost (0-255), nearest first. */
+	private static final int[] GHOST_ALPHA = { 150, 115, 80, 45 };
+	/** Ghost colours, used in turn. */
+	private static final Color[] GHOST_COLORS = {
+			new Color(0, 220, 255), new Color(160, 90, 255) };
 	/** Pixels the ship must move over the history to count as moving. */
 	private static final int MIN_MOVE = 4;
 
@@ -39,6 +49,31 @@ public final class GhostTrail {
 			return false;
 		return Math.abs(this.history.getFirst()[0]
 				- this.history.getLast()[0]) >= MIN_MOVE;
+	}
+
+    /**
+	 * Records the ship's position, then draws its ghosts behind it.
+	 * Call every frame, just before the ship is drawn.
+	 *
+	 * @param drawManager
+	 *            Draw manager.
+	 * @param ship
+	 *            Player ship.
+	 */
+	public void draw(final DrawManager drawManager, final Ship ship) {
+		record(ship.getPositionX(), ship.getPositionY());
+		if (!isMoving())
+			return;
+		// Farthest ghost first, so nearer ghosts are drawn on top.
+		for (int k = GHOST_FRAMES.length - 1; k >= 0; k--) {
+			int[] pos = positionFramesAgo(GHOST_FRAMES[k]);
+			if (pos == null)
+				continue;
+			Color base = GHOST_COLORS[k % GHOST_COLORS.length];
+			drawManager.drawSprite(ship.getSpriteType(), pos[0], pos[1],
+					new Color(base.getRed(), base.getGreen(),
+							base.getBlue(), GHOST_ALPHA[k]));
+		}
 	}
 
 	/**
