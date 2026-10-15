@@ -100,7 +100,8 @@ public final class ShopCatalog {
 
 		// Effects (VFX team, Effection): bought once, either currency.
 		// Each effect PR adds its own line here with effect(...).
-
+		items.add(effect("warp_in", "Warp In", "Your ship beams in at the"
+				+ " start of each level and after a lost life. Look only.", 45, 25));
 		ITEMS = Collections.unmodifiableList(items);
 	}
 
