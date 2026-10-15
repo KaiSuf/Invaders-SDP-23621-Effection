@@ -533,6 +533,7 @@ public class ShopScreen extends Screen {
 		if (this.entries.isEmpty()) {
 			if (this.tab == Tab.EFFECTS) {
 				drawEffectsPlaceholderRow();
+				drawLightningPlaceholderRow();
 				return;
 			}
 			this.drawManager.drawSmallString("Nothing for sale here.",
@@ -737,6 +738,22 @@ public class ShopScreen extends Screen {
 		this.drawManager.drawBox(row.x, row.y, row.width, row.height,
 				BORDER);
 		this.drawManager.drawSmallString("COMET TRAIL", row.x + 8,
+				row.y + 18, Color.GRAY);
+		String soon = "SOON";
+		this.drawManager.drawSmallString(soon, row.x + row.width - 8
+				- this.drawManager.getSmallStringWidth(soon), row.y + 18,
+				Tab.EFFECTS.color);
+	}
+
+	/**
+	 * Placeholder row for Lightning Chain until it is sold.
+	 * AUTHORED BY: VFX TEAM (Effection)
+	 */
+	private void drawLightningPlaceholderRow() {
+		Rectangle row = rowArea(1);
+		this.drawManager.drawBox(row.x, row.y, row.width, row.height,
+				BORDER);
+		this.drawManager.drawSmallString("LIGHTNING CHAIN", row.x + 8,
 				row.y + 18, Color.GRAY);
 		String soon = "SOON";
 		this.drawManager.drawSmallString(soon, row.x + row.width - 8
