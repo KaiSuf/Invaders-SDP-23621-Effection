@@ -257,11 +257,7 @@ public class GameScreen extends Screen {
 	private MeteorManager meteors;
 	/** Points shown when enemies are destroyed. AUTHORED BY: VFX TEAM (Effection) */
 	private PointsEffect pointsEffect;
-<<<<<<< HEAD
 	/** Ghost Trail ship effect, null if not bought or switched off. AUTHORED BY: VFX TEAM (Effection) */
-=======
-	/** Ghost Trail ship effect, null if not owned. AUTHORED BY: VFX TEAM (Effection) */
->>>>>>> 2164642 (feat(vfx): show Ghost Trail in game when owned)
 	private engine.GhostTrail ghostTrail;
 	/** Diamonds earned this run but not yet cashed out; lost on death,
 	 * banked into DiamondManager only when the player cashes out. */
