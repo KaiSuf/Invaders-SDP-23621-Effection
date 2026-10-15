@@ -22,6 +22,7 @@ import engine.GameSettings;
 import engine.GameState;
 import engine.Achievement;
 import engine.DamageDimEffect;
+import engine.LightningChain;
 import engine.GameEvents;
 import engine.GlitchEffect;
 import engine.PurchaseManager;
@@ -238,6 +239,10 @@ public class GameScreen extends Screen {
 	private boolean tookDamage;
 	/** Dims the screen when the player is hit. */
 	private DamageDimEffect damageDim;
+	/** Lightning Chain kill effect. AUTHORED BY: VFX TEAM (Effection) */
+	private LightningChain lightningChain;
+	/** Test switch until the shop sells it: java -Dvfx.lightning=true */
+	private static final boolean LIGHTNING_ON = Boolean.getBoolean("vfx.lightning");
 	/** Glitch effect for low health. */
 	private GlitchEffect glitch;
 	/** Screen shake when an enemy is destroyed. */
@@ -365,6 +370,8 @@ public class GameScreen extends Screen {
 		this.damageDim = new DamageDimEffect(900, 0.75f,
         new java.awt.Color(150, 0, 0));  //new update dim effect
 		GameEvents.subscribe(GameEvents.Type.PLAYER_HIT, this.damageDim);
+		this.lightningChain = new LightningChain(); // AUTHORED BY: VFX TEAM (Effection)
+		GameEvents.subscribe(GameEvents.Type.PLAYER_HIT, this.lightningChain);
 		this.glitch = new GlitchEffect();
 		this.screenShake = new ScreenShake();
 		this.meteors = new MeteorManager(this.level, this.width, this.height,SEPARATION_LINE_HEIGHT);
@@ -416,6 +423,7 @@ public class GameScreen extends Screen {
 			super.run();
 		} finally {
 			GameEvents.unsubscribe(GameEvents.Type.PLAYER_HIT, this.damageDim);
+			GameEvents.unsubscribe(GameEvents.Type.PLAYER_HIT, this.lightningChain);
 		}
 
 		this.items.endLevel(); // Item System (Team CS)
@@ -516,6 +524,7 @@ public class GameScreen extends Screen {
 				this.enemyShipFormation.shoot(this.bullets);
 				this.meteors.trySpawn(this.enemyShipFormation, this.ship); // VFX meteor needs a normal formation.
 			}
+			this.lightningChain.update(); // AUTHORED BY: VFX TEAM (Effection)
 			updateLowHealthEffect();
 			this.ship.setBlinking(this.lowHealthActive);
 		}
@@ -827,6 +836,7 @@ if (this.midBoss != null) {
 		// Hit sparkles move with the game world.
 		drawManager.drawParticles(this, this.particles,
 				SEPARATION_LINE_HEIGHT);
+		drawManager.drawLightningChain(this.lightningChain);
 
 		for (Bullet bullet : this.bullets)
 			drawManager.drawEntity(bullet, bullet.getPositionX(),
@@ -1003,6 +1013,11 @@ if (this.midBoss != null) {
 							this.shipsDestroyed++;
 							spawnSparkles(enemyShip);
 							this.enemyShipFormation.destroy(enemyShip);
+							if (LIGHTNING_ON) // Lightning Chain. AUTHORED BY: VFX TEAM (Effection)
+								this.lightningChain.onKill(
+										enemyShip.getPositionX() + enemyShip.getWidth() / 2,
+										enemyShip.getPositionY() + enemyShip.getHeight() / 2,
+										aliveEnemyCenters());
 							this.screenShake.trigger();
 							this.pointsEffect.spawn(
 									enemyShip.getPositionX() + enemyShip.getWidth() / 2,
@@ -1045,6 +1060,19 @@ if (this.midBoss != null) {
 		}
 		this.bullets.removeAll(recyclable);
 		BulletPool.recycle(recyclable);
+	}
+
+	/**
+	 * @return Centers of all enemies that are still alive.
+	 *         AUTHORED BY: VFX TEAM (Effection)
+	 */
+	private java.util.List<java.awt.Point> aliveEnemyCenters() {
+		java.util.List<java.awt.Point> centers = new java.util.ArrayList<java.awt.Point>();
+		for (EnemyShip e : this.enemyShipFormation)
+			if (!e.isDestroyed())
+				centers.add(new java.awt.Point(e.getPositionX() + e.getWidth() / 2,
+						e.getPositionY() + e.getHeight() / 2));
+		return centers;
 	}
 
 	/**
