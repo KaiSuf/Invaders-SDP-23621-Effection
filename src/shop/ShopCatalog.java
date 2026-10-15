@@ -110,7 +110,9 @@ public final class ShopCatalog {
 				+ " ship follow it while it moves. Look only.", 55, 30));
 		items.add(effect("warp_in", "Warp In", "Your ship beams in at the"
 				+ " start of each level and after a lost life. Look only.", 45, 25));
-		
+		items.add(effect("warp_in", "Warp In", "Your ship beams in at the"
+				+ " start of each level and after a lost life. Look only.", 45, 25));
+
 		ITEMS = Collections.unmodifiableList(items);
 	}
 
