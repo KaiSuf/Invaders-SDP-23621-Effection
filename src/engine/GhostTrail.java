@@ -52,6 +52,11 @@ public final class GhostTrail {
 				- this.history.getLast()[0]) >= MIN_MOVE;
 	}
 
+	/** Forgets every remembered position, so no ghosts show. */
+	public void clear() {
+		this.history.clear();
+	}
+	
     /**
 	 * Records the ship's position, then draws its ghosts behind it.
 	 * Call every frame, just before the ship is drawn.
