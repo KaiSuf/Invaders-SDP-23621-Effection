@@ -834,6 +834,82 @@ public class ShopScreen extends Screen {
 				bulletY, 2, new Color(255, 246, 208));
 	}
 
+	/** Lightning tier colours. AUTHORED BY: VFX TEAM (Effection) */
+	private static final Color[] LIGHTNING_COLORS = {
+			new Color(79, 184, 255), new Color(176, 107, 255),
+			new Color(255, 200, 61) };
+
+	/**
+	 * Animated preview: a shot kills the middle enemy and lightning jumps
+	 * to its neighbours. Colour cycles through the streak tiers.
+	 * AUTHORED BY: VFX TEAM (Effection)
+	 *
+	 * @param centerX
+	 *            Horizontal centre of the preview.
+	 * @param top
+	 *            Top of the preview.
+	 */
+	private void drawLightningChainPreview(final int centerX, final int top) {
+		PurchaseManager purchases = PurchaseManager.getInstance();
+		long now = System.currentTimeMillis();
+		Color bolt = LIGHTNING_COLORS[(int) (now / 1200 % 3)];
+		float k = (now % 1200) / 1200f;
+		int enemyY = top + 4;
+		int shipY = top + 30;
+
+		// Ship in the selected skin colour.
+		SpriteType shipSprite = purchases.getSelectedShip().getIdleSprite();
+		int[] size = this.drawManager.getSpriteSize(shipSprite);
+		this.drawManager.drawSpriteScaled(shipSprite,
+				centerX - size[0] * 2 / 2, shipY, 2,
+				purchases.getSelectedSkin().colorAt(now));
+
+		// Left and right enemies; middle one only before the hit.
+		drawPreviewEnemy(centerX - 36, enemyY, k > 0.25f && k < 0.7f);
+		drawPreviewEnemy(centerX + 36, enemyY, k > 0.25f && k < 0.7f);
+		if (k < 0.25f) {
+			drawPreviewEnemy(centerX, enemyY, false);
+			int bulletY = shipY - 4 - (int) (k / 0.25f * (shipY - enemyY - 8));
+			this.drawManager.fillBox(centerX - 1, bulletY, 2, 6, Color.WHITE);
+		} else if (k < 0.7f && (now / 50) % 3 != 2) {
+			drawPixelBolt(centerX, enemyY + 4, centerX - 36, enemyY + 4, bolt);
+			drawPixelBolt(centerX, enemyY + 4, centerX + 36, enemyY + 4, bolt);
+		}
+	}
+
+	/** Small white enemy block; blue tint when shocked. */
+	private void drawPreviewEnemy(final int x, final int y,
+			final boolean shocked) {
+		int jitter = shocked ? (int) (System.nanoTime() / 30000000 % 3) - 1 : 0;
+		Color c = shocked ? new Color(200, 230, 255) : Color.WHITE;
+		this.drawManager.fillBox(x - 8 + jitter, y, 16, 8, c);
+		this.drawManager.fillBox(x - 5 + jitter, y + 2, 3, 3, Color.BLACK);
+		this.drawManager.fillBox(x + 2 + jitter, y + 2, 3, 3, Color.BLACK);
+	}
+
+	/** Jagged pixel bolt between two points: glow + bright core. */
+	private void drawPixelBolt(final int x1, final int y1, final int x2,
+			final int y2, final Color color) {
+		Color glow = new Color(color.getRed(), color.getGreen(),
+				color.getBlue(), 90);
+		int steps = 8;
+		int px = x1;
+		int py = y1;
+		for (int i = 1; i <= steps; i++) {
+			int nx = x1 + (x2 - x1) * i / steps;
+			int ny = y1 + (y2 - y1) * i / steps
+					+ (i < steps ? (int) (Math.random() * 9) - 4 : 0);
+			for (int s = 0; s <= 4; s++) {
+				int bx = px + (nx - px) * s / 4;
+				int by = py + (ny - py) * s / 4;
+				this.drawManager.fillBox(bx - 2, by - 2, 4, 4, glow);
+				this.drawManager.fillBox(bx, by, 1, 1, Color.WHITE);
+			}
+			px = nx;
+			py = ny;
+		}
+	}
+
 	/**
 	 * Preview for an effect item, chosen by its effect id. Each effect
 	 * adds its own case. AUTHORED BY: VFX TEAM (Effection)
