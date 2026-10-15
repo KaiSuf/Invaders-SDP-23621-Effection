@@ -71,8 +71,14 @@ public final class GhostTrail {
 	 * @param shipColor
 	 *            Skin colour of the ship this frame; ghosts keep it.
 	 */
-	public void draw(final DrawManager drawManager, final Ship ship,
-			final Color shipColor) {
+	public void draw(final DrawManager drawManager, final Ship ship,final Color shipColor) {
+		
+		// No ghosts while the ship is destroyed; start fresh after.
+		if (ship.isDestroyed()) {
+			clear();
+			return;
+		}
+		
 		record(ship.getPositionX(), ship.getPositionY(), shipColor);
 		if (!isMoving())
 			return;
