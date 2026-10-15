@@ -27,19 +27,22 @@ public final class GhostTrail {
 	/** Pixels the ship must move over the history to count as moving. */
 	private static final int MIN_MOVE = 4;
 
-	/** Past ship positions, newest first: {x, y}. */
+	/** Past ship positions, newest first: {x, y, colour as RGB}. */
 	private final ArrayDeque<int[]> history = new ArrayDeque<int[]>();
 
 	/**
-	 * Remembers where the ship is this frame. Call once per frame.
+	 * Remembers where the ship is this frame, and its colour. Call once
+	 * per frame.
 	 *
 	 * @param x
 	 *            Ship x.
 	 * @param y
 	 *            Ship y.
+	 * @param color
+	 *            Ship colour this frame (skin colour).
 	 */
-	public void record(final int x, final int y) {
-		this.history.addFirst(new int[] { x, y });
+	public void record(final int x, final int y, final Color color) {
+		this.history.addFirst(new int[] { x, y, color.getRGB() });
 		if (this.history.size() > HISTORY)
 			this.history.removeLast();
 	}
@@ -65,9 +68,12 @@ public final class GhostTrail {
 	 *            Draw manager.
 	 * @param ship
 	 *            Player ship.
+	 * @param shipColor
+	 *            Skin colour of the ship this frame; ghosts keep it.
 	 */
-	public void draw(final DrawManager drawManager, final Ship ship) {
-		record(ship.getPositionX(), ship.getPositionY());
+	public void draw(final DrawManager drawManager, final Ship ship,
+			final Color shipColor) {
+		record(ship.getPositionX(), ship.getPositionY(), shipColor);
 		if (!isMoving())
 			return;
 		// Farthest ghost first, so nearer ghosts are drawn on top.
@@ -75,7 +81,7 @@ public final class GhostTrail {
 			int[] pos = positionFramesAgo(GHOST_FRAMES[k]);
 			if (pos == null)
 				continue;
-			Color base = GHOST_COLORS[k % GHOST_COLORS.length];
+			Color base = new Color(pos[2]);
 			drawManager.drawSprite(ship.getSpriteType(), pos[0], pos[1],
 					new Color(base.getRed(), base.getGreen(),
 							base.getBlue(), GHOST_ALPHA[k]));

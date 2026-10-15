@@ -747,7 +747,8 @@ public class GameScreen extends Screen {
 			// battlefield behind it - only the top HUD stays visible.
 			// Ghost Trail behind the ship. AUTHORED BY: VFX TEAM (Effection)
 			if (this.ghostTrail != null)
-				this.ghostTrail.draw(drawManager, this.ship);
+				this.ghostTrail.draw(drawManager, this.ship,
+						this.skin.colorAt(System.currentTimeMillis()));
 			drawManager.drawEntity(this.ship, this.ship.getPositionX(),
 					this.ship.getPositionY());
 			drawManager.drawItemShield(this.ship, this.items); // Item System (Team CS)
