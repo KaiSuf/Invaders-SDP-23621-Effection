@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.util.ArrayDeque;
 import java.util.Iterator;
 
+import engine.DrawManager.SpriteType;
 import entity.Ship;
 
 /**
@@ -88,5 +89,49 @@ public final class GhostTrail {
 		for (int i = 0; i < frames; i++)
 			it.next();
 		return it.next();
+	}
+    
+	/**
+	 * Shop preview: the ship slides left and right with its ghosts behind.
+	 *
+	 * @param drawManager
+	 *            Draw manager.
+	 * @param sprite
+	 *            Ship sprite to show.
+	 * @param shipColor
+	 *            Ship colour (selected skin).
+	 * @param centerX
+	 *            Horizontal centre of the preview.
+	 * @param top
+	 *            Top of the preview.
+	 */
+	public static void drawPreview(final DrawManager drawManager,
+			final SpriteType sprite, final Color shipColor,
+			final int centerX, final int top) {
+		final int pixel = 3;
+		final int frameMs = 16;
+		long now = System.currentTimeMillis();
+		int[] size = drawManager.getSpriteSize(sprite);
+		int shipY = top + 20;
+		for (int k = GHOST_FRAMES.length - 1; k >= 0; k--) {
+			Color base = GHOST_COLORS[k % GHOST_COLORS.length];
+			drawManager.drawSpriteScaled(sprite, previewX(centerX,
+					size[0] * pixel, now - GHOST_FRAMES[k] * frameMs), shipY,
+					pixel, new Color(base.getRed(), base.getGreen(),
+							base.getBlue(), GHOST_ALPHA[k]));
+		}
+		drawManager.drawSpriteScaled(sprite, previewX(centerX,
+				size[0] * pixel, now), shipY, pixel, shipColor);
+	}
+
+	/**
+	 * @return Left edge of the preview ship at a given time: it slides
+	 *         36 px each way and pauses at the ends.
+	 */
+	private static int previewX(final int centerX, final int width,
+			final long time) {
+		double phase = (time % 2400) / 2400.0 * 2 * Math.PI;
+		double s = Math.max(-1, Math.min(1, Math.sin(phase) * 1.4));
+		return centerX - width / 2 + (int) Math.round(s * 36);
 	}
 }

@@ -832,6 +832,14 @@ public class ShopScreen extends Screen {
 			final int top) {
 		PurchaseManager purchases = PurchaseManager.getInstance();
 		final int pixel = 3;
+		// Ghost Trail has its own preview. AUTHORED BY: VFX TEAM (Effection)
+		if ("effect_ghost_trail".equals(item.getId())) {
+			engine.GhostTrail.drawPreview(this.drawManager,
+					purchases.getSelectedShip().getIdleSprite(),
+					purchases.getSelectedSkin().colorAt(
+							System.currentTimeMillis()), centerX, top);
+			return;
+		}
 		switch (item.getCategory()) {
 		case SHIP:
 		case SKIN: {
