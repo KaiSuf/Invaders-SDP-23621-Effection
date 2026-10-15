@@ -25,11 +25,17 @@ import shop.Skin;
 public final class GhostTrail {
 
 	/** How many past positions are remembered (one per frame). */
-	private static final int HISTORY = 17;
+	private static final int HISTORY = 25;
 	/** How many frames back each ghost is drawn, nearest first. */
 	private static final int[] GHOST_FRAMES = { 4, 8, 12, 16 };
 	/** Opacity of each ghost (0-255), nearest first. */
 	private static final int[] GHOST_ALPHA = { 150, 115, 80, 45 };
+	/** Extra ghosts while surging (boost item): frames back, farther out. */
+	private static final int[] SURGE_FRAMES = { 20, 24 };
+	/** Opacity of each extra surge ghost (0-255). */
+	private static final int[] SURGE_ALPHA = { 40, 25 };
+	/** Frames looked back to decide if the ship is moving. */
+	private static final int MOVE_FRAMES = 16;
 	/** Pixels the ship must move over the history to count as moving. */
 	private static final int MIN_MOVE = 4;
 	/** Frames looked back to measure the ship's speed. */
@@ -84,8 +90,9 @@ public final class GhostTrail {
 	public boolean isMoving() {
 		if (this.count < 2)
 			return false;
+		int oldest = slotFramesAgo(Math.min(this.count - 1, MOVE_FRAMES));
 		return Math.abs(this.historyX[this.newest]
-				- this.historyX[slotFramesAgo(this.count - 1)]) >= MIN_MOVE;
+				- this.historyX[oldest]) >= MIN_MOVE;
 	}
 
 	/** Forgets every remembered position, so no ghosts show. */
@@ -106,6 +113,24 @@ public final class GhostTrail {
 	 */
 	public void draw(final DrawManager drawManager, final Ship ship,
 			final Color shipColor) {
+		draw(drawManager, ship, shipColor, false);
+	}
+
+	/**
+	 * Same as {@link #draw(DrawManager, Ship, Color)}, with a surge: while
+	 * surging, extra ghosts make the trail longer.
+	 *
+	 * @param drawManager
+	 *            Draw manager.
+	 * @param ship
+	 *            Player ship.
+	 * @param shipColor
+	 *            Skin colour of the ship this frame; ghosts keep it.
+	 * @param surging
+	 *            True while the ship is boosted.
+	 */
+	public void draw(final DrawManager drawManager, final Ship ship,
+			final Color shipColor, final boolean surging) {
 		// No ghosts while the ship is destroyed; start fresh after.
 		if (ship.isDestroyed()) {
 			clear();
@@ -115,6 +140,11 @@ public final class GhostTrail {
 		if (!isMoving())
 			return;
 		double strength = speedStrength();
+		// Surge ghosts are the farthest, so they are drawn first.
+		if (surging)
+			for (int k = SURGE_FRAMES.length - 1; k >= 0; k--)
+				drawGhost(drawManager, ship, SURGE_FRAMES[k],
+						SURGE_ALPHA[k] * strength);
 		// Farthest ghost first, so nearer ghosts are drawn on top.
 		for (int k = GHOST_FRAMES.length - 1; k >= 0; k--) {
 			int slot = slotFramesAgo(GHOST_FRAMES[k]);
@@ -127,6 +157,30 @@ public final class GhostTrail {
 					new Color(base.getRed(), base.getGreen(),
 							base.getBlue(), alpha));
 		}
+	}
+
+	/**
+	 * Draws one ghost, if that frame is remembered.
+	 *
+	 * @param drawManager
+	 *            Draw manager.
+	 * @param ship
+	 *            Player ship (for its sprite).
+	 * @param frames
+	 *            How many frames back the ghost is.
+	 * @param alpha
+	 *            Opacity (0-255).
+	 */
+	private void drawGhost(final DrawManager drawManager, final Ship ship,
+			final int frames, final double alpha) {
+		int slot = slotFramesAgo(frames);
+		if (slot < 0)
+			return;
+		Color base = new Color(this.historyColor[slot]);
+		drawManager.drawSprite(ship.getSpriteType(),
+				this.historyX[slot], this.historyY[slot],
+				new Color(base.getRed(), base.getGreen(), base.getBlue(),
+						(int) Math.round(alpha)));
 	}
 
 	/**
