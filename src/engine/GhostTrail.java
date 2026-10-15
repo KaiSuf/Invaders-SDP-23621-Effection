@@ -146,17 +146,9 @@ public final class GhostTrail {
 				drawGhost(drawManager, ship, SURGE_FRAMES[k],
 						SURGE_ALPHA[k] * strength);
 		// Farthest ghost first, so nearer ghosts are drawn on top.
-		for (int k = GHOST_FRAMES.length - 1; k >= 0; k--) {
-			int slot = slotFramesAgo(GHOST_FRAMES[k]);
-			if (slot < 0)
-				continue;
-			Color base = new Color(this.historyColor[slot]);
-			int alpha = (int) Math.round(GHOST_ALPHA[k] * strength);
-			drawManager.drawSprite(ship.getSpriteType(),
-					this.historyX[slot], this.historyY[slot],
-					new Color(base.getRed(), base.getGreen(),
-							base.getBlue(), alpha));
-		}
+		for (int k = GHOST_FRAMES.length - 1; k >= 0; k--)
+			drawGhost(drawManager, ship, GHOST_FRAMES[k],
+					GHOST_ALPHA[k] * strength);
 	}
 
 	/**
