@@ -221,3 +221,13 @@ Our Visual Effect System needs to coordinate with the Sound Effects/BGM Team for
 - Fallback: `res/font.ttf` (used if the default font is missing)
 - Try another font: `java -Dgame.font=<path> -cp "out;res" engine.Core`
 - Long key hint lines shrink to fit the screen width.
+
+## Lightning Chain (kill effect)
+
+- On enemy kill, a forked bolt jumps to the nearest alive enemies (look only).
+- Streak: kills within 1.5 s. Reset on timeout or player hit (PLAYER_HIT).
+- Tier 1 (1–2 kills): blue, 2 jumps. Tier 2 (3–5): violet, 3 jumps.
+  Tier 3 (6+): gold, 4 jumps, bigger flash.
+- Test switch until the shop sells it: `java -Dvfx.lightning=true -cp "out;res" engine.Core`
+- Files: `engine/LightningChain.java`, `GameScreen`, `DrawManager.drawLightningChain`,
+  `ShopScreen` (placeholder + preview).

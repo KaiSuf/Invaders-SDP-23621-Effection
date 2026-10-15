@@ -21,6 +21,7 @@ import engine.GameSettings;
 import engine.GameState;
 import engine.Achievement;
 import engine.DamageDimEffect;
+import engine.LightningChain;
 import engine.GameEvents;
 import engine.GlitchEffect;
 import engine.PurchaseManager;
@@ -220,6 +221,12 @@ public class GameScreen extends Screen {
 	private boolean lowHealthActive;
 	/** Dims the screen when the player is hit. */
 	private DamageDimEffect damageDim;
+	/** Lightning Chain kill effect. AUTHORED BY: VFX TEAM (Effection) */
+	private LightningChain lightningChain;
+	/** Test switch: java -Dvfx.lightning=true turns it on without buying. */
+	private static final boolean LIGHTNING_ON = Boolean.getBoolean("vfx.lightning");
+	/** True when the player owns Lightning Chain (or the test switch is on). */
+	private boolean lightningOn;
 	/** Glitch effect for low health. */
 	private GlitchEffect glitch;
 	/** Screen shake when an enemy is destroyed. */
@@ -324,6 +331,12 @@ public class GameScreen extends Screen {
 		this.damageDim = new DamageDimEffect(900, 0.75f,
         new java.awt.Color(150, 0, 0));  //new update dim effect
 		GameEvents.subscribe(GameEvents.Type.PLAYER_HIT, this.damageDim);
+		this.lightningChain = new LightningChain(); // AUTHORED BY: VFX TEAM (Effection)
+		shop.ShopItem lightningItem = shop.ShopCatalog.findByRef(
+				shop.ShopCategory.EFFECT, "lightning_chain");
+		this.lightningOn = LIGHTNING_ON || (lightningItem != null
+				&& PurchaseManager.getInstance().isOwned(lightningItem));
+		GameEvents.subscribe(GameEvents.Type.PLAYER_HIT, this.lightningChain);
 		this.glitch = new GlitchEffect();
 		this.screenShake = new ScreenShake();
 		this.pointsEffect = new PointsEffect(SEPARATION_LINE_HEIGHT);
@@ -372,6 +385,7 @@ public class GameScreen extends Screen {
 			super.run();
 		} finally {
 			GameEvents.unsubscribe(GameEvents.Type.PLAYER_HIT, this.damageDim);
+			GameEvents.unsubscribe(GameEvents.Type.PLAYER_HIT, this.lightningChain);
 		}
 
 		this.items.endLevel(); // Item System (Team CS)
@@ -459,6 +473,7 @@ public class GameScreen extends Screen {
 			if (!this.items.enemiesFrozen()) // Freeze item (Team CS)
 				this.enemyShipFormation.update();
 			this.enemyShipFormation.shoot(this.bullets);
+			this.lightningChain.update();
 			/**
 			 * AUTHORED BY: VFX TEAM (effection)
 			 *
@@ -754,6 +769,7 @@ public class GameScreen extends Screen {
 		// cover the HUD. AUTHORED BY: VFX TEAM (Effection)
 		drawManager.drawParticles(this, this.particles,
 				SEPARATION_LINE_HEIGHT);
+		drawManager.drawLightningChain(this.lightningChain);
 
 			for (Bullet bullet : this.bullets)
 				drawManager.drawEntity(bullet, bullet.getPositionX(),
@@ -912,6 +928,11 @@ public class GameScreen extends Screen {
 						this.shipsDestroyed++;
 						spawnSparkles(enemyShip); // AUTHORED BY: VFX TEAM (Effection)
 						this.enemyShipFormation.destroy(enemyShip);
+						if (this.lightningOn) // Lightning Chain. AUTHORED BY: VFX TEAM (Effection)
+							this.lightningChain.onKill(
+									enemyShip.getPositionX() + enemyShip.getWidth() / 2,
+									enemyShip.getPositionY() + enemyShip.getHeight() / 2,
+									aliveEnemyCenters());
 						this.screenShake.trigger();
 						// Points popup. AUTHORED BY: VFX TEAM (Effection)
 						this.pointsEffect.spawn(enemyShip.getPositionX() + enemyShip.getWidth() / 2,
@@ -946,6 +967,19 @@ public class GameScreen extends Screen {
 			}
 		this.bullets.removeAll(recyclable);
 		BulletPool.recycle(recyclable);
+	}
+
+	/**
+	 * @return Centers of all enemies that are still alive.
+	 *         AUTHORED BY: VFX TEAM (Effection)
+	 */
+	private java.util.List<java.awt.Point> aliveEnemyCenters() {
+		java.util.List<java.awt.Point> centers = new java.util.ArrayList<java.awt.Point>();
+		for (EnemyShip e : this.enemyShipFormation)
+			if (!e.isDestroyed())
+				centers.add(new java.awt.Point(e.getPositionX() + e.getWidth() / 2,
+						e.getPositionY() + e.getHeight() / 2));
+		return centers;
 	}
 
 	/**

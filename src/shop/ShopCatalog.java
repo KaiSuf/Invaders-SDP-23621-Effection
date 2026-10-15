@@ -98,6 +98,12 @@ public final class ShopCatalog {
 		items.add(upgrade("long_lasting", "Long Lasting", "Shield, freeze"
 				+ " and boosts last longer.", 50, 25, 25, 12, 3));
 
+		// Effects (VFX team, Effection): bought once, either currency.
+		// Each effect PR adds its own line here with effect(...).
+		items.add(effect("lightning_chain", "Lightning Chain", "Kills chain"
+				+ " lightning to nearby enemies. Streaks turn it violet,"
+				+ " then gold. Look only.", 60, 30));
+
 		ITEMS = Collections.unmodifiableList(items);
 	}
 
@@ -203,6 +209,27 @@ public final class ShopCatalog {
 			}
 			return name.toString();
 		}
+	}
+	/**
+	 * Effect item (VFX team, Effection): bought once, either currency.
+	 *
+	 * @param effectId
+	 *            Effect id, also used as the ref (for example "comet_trail").
+	 * @param name
+	 *            Name shown in the shop.
+	 * @param description
+	 *            Description shown in the detail panel.
+	 * @param coins
+	 *            Price in coins.
+	 * @param diamonds
+	 *            Price in diamonds.
+	 * @return The shop entry.
+	 */
+
+	private static ShopItem effect(final String effectId, final String name,
+	                               final String description, final int coins, final int diamonds) {
+		return new ShopItem("effect_" + effectId, name, description,
+				ShopCategory.EFFECT, coins, diamonds, 0, 0, 1, effectId);
 	}
 
 	private static ShopItem ship(final ShipType type,
