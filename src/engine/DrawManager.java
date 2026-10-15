@@ -1614,6 +1614,18 @@ public final class DrawManager {
 	}
 
 	/**
+	 * Draws the Lightning Chain kill effect.
+	 * AUTHORED BY: VFX TEAM (Effection)
+	 *
+	 * @param effect
+	 *            Effect to draw.
+	 */
+	public void drawLightningChain(final LightningChain effect) {
+		if (effect != null)
+			effect.draw(backBufferGraphics);
+	}
+
+	/**
 	 * Draws the low-health glitch effect.
 	 * AUTHORED BY: VFX TEAM (Effection)
 	 *Any further inquiries please contact us.
