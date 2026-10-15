@@ -111,6 +111,10 @@ public final class ShopCatalog {
 		items.add(effect("warp_in", "Warp In", "Your ship beams in at the"
 				+ " start of each level and after a lost life. Look only.", 45, 25));
 
+		// Ship effects (VFX team, Effection): bought once, either currency.
+		items.add(effect("ghost_trail", "Ghost Trail", "Fading copies of your"
+				+ " ship follow it while it moves. Look only.", 55, 30));
+
 		ITEMS = Collections.unmodifiableList(items);
 	}
 
