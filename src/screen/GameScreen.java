@@ -407,6 +407,9 @@ public class GameScreen extends Screen {
 				&& this.pauseKeyCooldown.checkFinished()) {
 			this.paused = !this.paused;
 			this.pauseKeyCooldown.reset();
+			// Ghost Trail starts fresh after a pause. AUTHORED BY: VFX TEAM (Effection)
+			if (this.ghostTrail != null)
+				this.ghostTrail.clear();
 			this.pauseSelection = PauseOption.RESUME;
 			this.logger.info(this.paused ? "Game paused" : "Game resumed");
 		}
