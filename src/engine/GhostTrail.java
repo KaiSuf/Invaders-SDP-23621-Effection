@@ -34,6 +34,10 @@ public final class GhostTrail {
 	private static final int[] SURGE_FRAMES = { 20, 24 };
 	/** Opacity of each extra surge ghost (0-255). */
 	private static final int[] SURGE_ALPHA = { 40, 25 };
+	/** How far ghosts are lightened toward white while surging (0-1). */
+	private static final double SURGE_GLOW = 0.4;
+	/** Frames the surge takes to fade fully in or out. */
+	private static final int SURGE_RAMP_FRAMES = 12;
 	/** Frames looked back to decide if the ship is moving. */
 	private static final int MOVE_FRAMES = 16;
 	/** Pixels the ship must move over the history to count as moving. */
@@ -65,7 +69,11 @@ public final class GhostTrail {
 	private int newest = -1;
 	/** How many positions are stored (at most HISTORY). */
 	private int count;
-
+	/** How far ghosts are lightened this frame (0 = normal colour). */
+	private double glow;
+	/** How far the surge has faded in (0 = off, 1 = full). */
+	private double surgeLevel;
+	
 	/**
 	 * Remembers where the ship is this frame, and its colour. Call once
 	 * per frame.
@@ -98,6 +106,7 @@ public final class GhostTrail {
 	/** Forgets every remembered position, so no ghosts show. */
 	public void clear() {
 		this.count = 0;
+		this.surgeLevel = 0;
 	}
 
 	/**
@@ -137,14 +146,19 @@ public final class GhostTrail {
 			return;
 		}
 		record(ship.getPositionX(), ship.getPositionY(), shipColor);
+		// Fade the surge in or out a little every frame.
+		double step = 1.0 / SURGE_RAMP_FRAMES;
+		this.surgeLevel = surging ? Math.min(1, this.surgeLevel + step)
+				: Math.max(0, this.surgeLevel - step);
 		if (!isMoving())
 			return;
 		double strength = speedStrength();
+		this.glow = SURGE_GLOW * this.surgeLevel;
 		// Surge ghosts are the farthest, so they are drawn first.
-		if (surging)
+		if (this.surgeLevel > 0)
 			for (int k = SURGE_FRAMES.length - 1; k >= 0; k--)
 				drawGhost(drawManager, ship, SURGE_FRAMES[k],
-						SURGE_ALPHA[k] * strength);
+						SURGE_ALPHA[k] * strength * this.surgeLevel);
 		// Farthest ghost first, so nearer ghosts are drawn on top.
 		for (int k = GHOST_FRAMES.length - 1; k >= 0; k--)
 			drawGhost(drawManager, ship, GHOST_FRAMES[k],
@@ -171,8 +185,17 @@ public final class GhostTrail {
 		Color base = new Color(this.historyColor[slot]);
 		drawManager.drawSprite(ship.getSpriteType(),
 				this.historyX[slot], this.historyY[slot],
-				new Color(base.getRed(), base.getGreen(), base.getBlue(),
-						(int) Math.round(alpha)));
+				new Color(lighten(base.getRed()), lighten(base.getGreen()),
+						lighten(base.getBlue()), (int) Math.round(alpha)));
+	}
+
+	/**
+	 * @param channel
+	 *            One colour channel (0-255).
+	 * @return The channel moved toward white by the current glow.
+	 */
+	private int lighten(final int channel) {
+		return (int) Math.round(channel + (255 - channel) * this.glow);
 	}
 
 	/**
