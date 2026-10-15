@@ -927,6 +927,9 @@ public class ShopScreen extends Screen {
 			case "comet_trail":
 				drawCometTrailPreview(centerX, top);
 				break;
+			case "lightning_chain":
+				drawLightningChainPreview(centerX, top);
+				break;
 			default:
 				drawCentered("PREVIEW SOON", centerX, top + 30, Color.GRAY);
 				break;
