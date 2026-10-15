@@ -1,8 +1,7 @@
 package engine;
 
 import java.awt.Color;
-import java.util.ArrayDeque;
-import java.util.Iterator;
+
 
 import engine.DrawManager.SpriteType;
 import entity.Ship;
@@ -33,8 +32,16 @@ public final class GhostTrail {
    	/** How visible ghosts are at the slowest speed (0-1). */
 	private static final double MIN_STRENGTH = 0.4;
 
-	/** Past ship positions, newest first: {x, y, colour as RGB}. */
-	private final ArrayDeque<int[]> history = new ArrayDeque<int[]>();
+	/** Past ship x positions, a ring buffer (no new objects per frame). */
+	private final int[] historyX = new int[HISTORY];
+	/** Past ship y positions, same slots as {@link #historyX}. */
+	private final int[] historyY = new int[HISTORY];
+	/** Past ship colours as RGB, same slots as {@link #historyX}. */
+	private final int[] historyColor = new int[HISTORY];
+	/** Slot of the newest position. */
+	private int newest = -1;
+	/** How many positions are stored (at most HISTORY). */
+	private int count;
 
 	/**
 	 * Remembers where the ship is this frame, and its colour. Call once
@@ -48,22 +55,24 @@ public final class GhostTrail {
 	 *            Ship colour this frame (skin colour).
 	 */
 	public void record(final int x, final int y, final Color color) {
-		this.history.addFirst(new int[] { x, y, color.getRGB() });
-		if (this.history.size() > HISTORY)
-			this.history.removeLast();
+		this.newest = (this.newest + 1) % HISTORY;
+		this.historyX[this.newest] = x;
+		this.historyY[this.newest] = y;
+		this.historyColor[this.newest] = color.getRGB();
+		if (this.count < HISTORY)
+			this.count++;
 	}
 
 	/** @return True if the ship moved enough lately to show ghosts. */
 	public boolean isMoving() {
-		if (this.history.size() < 2)
+		if (this.count < 2)
 			return false;
-		return Math.abs(this.history.getFirst()[0]
-				- this.history.getLast()[0]) >= MIN_MOVE;
+		return Math.abs(this.historyX[this.newest] - this.historyX[slotFramesAgo(this.count - 1)]) >= MIN_MOVE;
 	}
 
 	/** Forgets every remembered position, so no ghosts show. */
 	public void clear() {
-		this.history.clear();
+		this.count = 0;
 	}
 	
     /**
@@ -90,14 +99,14 @@ public final class GhostTrail {
 		double strength = speedStrength();
 		// Farthest ghost first, so nearer ghosts are drawn on top.
 		for (int k = GHOST_FRAMES.length - 1; k >= 0; k--) {
-			int[] pos = positionFramesAgo(GHOST_FRAMES[k]);
-			if (pos == null)
+			int slot = slotFramesAgo(GHOST_FRAMES[k]);
+			if (slot < 0)
 				continue;
-			Color base = new Color(pos[2]);
+			Color base = new Color(this.historyColor[slot]);
 			int alpha = (int) Math.round(GHOST_ALPHA[k] * strength);
-			drawManager.drawSprite(ship.getSpriteType(), pos[0], pos[1],
-					new Color(base.getRed(), base.getGreen(),
-							base.getBlue(), alpha));
+			drawManager.drawSprite(ship.getSpriteType(),
+					this.historyX[slot], this.historyY[slot],
+					new Color(base.getRed(), base.getGreen(), base.getBlue(), alpha));
 		}
 	}
 	
@@ -106,25 +115,22 @@ public final class GhostTrail {
    	 *         ghosts.
    	 */
 	private double speedStrength() {
-		int[] older = positionFramesAgo(SPEED_FRAMES);
-		if (older == null)
+		int older = slotFramesAgo(SPEED_FRAMES);
+		if (older < 0)
 			return 1;
-		double speed = Math.abs(this.history.getFirst()[0] - older[0])/ (double) SPEED_FRAMES;
+		double speed = Math.abs(this.historyX[this.newest] - this.historyX[older]) / (double) SPEED_FRAMES;
 		return MIN_STRENGTH + (1 - MIN_STRENGTH) * Math.min(1, speed / FULL_SPEED);
 	}
 
 	/**
 	 * @param frames
 	 *            Frames back (0 = now).
-	 * @return Ship position that many frames ago, or null if too new.
+	 * @return Ring buffer slot of that frame, or -1 if not stored yet.
 	 */
-	private int[] positionFramesAgo(final int frames) {
-		if (frames >= this.history.size())
-			return null;
-		Iterator<int[]> it = this.history.iterator();
-		for (int i = 0; i < frames; i++)
-			it.next();
-		return it.next();
+	private int slotFramesAgo(final int frames) {
+		if (frames >= this.count)
+			return -1;
+		return (this.newest - frames + HISTORY) % HISTORY;
 	}
     
 	/**
