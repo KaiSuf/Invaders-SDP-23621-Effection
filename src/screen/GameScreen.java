@@ -257,7 +257,11 @@ public class GameScreen extends Screen {
 	private MeteorManager meteors;
 	/** Points shown when enemies are destroyed. AUTHORED BY: VFX TEAM (Effection) */
 	private PointsEffect pointsEffect;
+<<<<<<< HEAD
 	/** Ghost Trail ship effect, null if not bought or switched off. AUTHORED BY: VFX TEAM (Effection) */
+=======
+	/** Ghost Trail ship effect, null if not owned. AUTHORED BY: VFX TEAM (Effection) */
+>>>>>>> 2164642 (feat(vfx): show Ghost Trail in game when owned)
 	private engine.GhostTrail ghostTrail;
 	/** Diamonds earned this run but not yet cashed out; lost on death,
 	 * banked into DiamondManager only when the player cashes out. */
@@ -394,6 +398,10 @@ public class GameScreen extends Screen {
 		if (PurchaseManager.getInstance().isEffectOn("ghost_trail"))		// Ghost Trail, on unless switched off in Customize. AUTHORED BY: VFX TEAM (Effection)
 			this.ghostTrail = new engine.GhostTrail();
 		this.scoreBoostPopups = new ArrayList<long[]>(); // Item System (Team CS)
+		// Ghost Trail, on in every run once bought. AUTHORED BY: VFX TEAM (Effection)
+		if (engine.PurchaseManager.getInstance().isOwned(
+				shop.ShopCatalog.findById("effect_ghost_trail")))
+			this.ghostTrail = new engine.GhostTrail();
 		this.coins = new HashSet<Coin>();
 		this.coinsCollectedThisLevel = 0;
 		this.achievementPopupQueue = new LinkedList<Achievement>();
