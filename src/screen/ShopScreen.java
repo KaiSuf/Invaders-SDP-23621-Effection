@@ -308,7 +308,7 @@ public class ShopScreen extends Screen {
 			addAll(result, ShopCatalog.getByCategory(ShopCategory.UPGRADE));
 			break;
 		case EFFECTS:
-			// Empty placeholder; effects are not sold yet.
+			addAll(result, ShopCatalog.getByCategory(ShopCategory.EFFECT));
 			break;
 		default:
 			for (ShopItem item : NightMarket.getListings())
@@ -385,6 +385,8 @@ public class ShopScreen extends Screen {
 	private static String afterBuying(final ShopItem item) {
 		if (item.getCategory() == ShopCategory.UPGRADE)
 			return "It is on.";
+		if (item.getCategory() == ShopCategory.EFFECT)
+			return "It is on in every run.";
 		return "Choose it in Customize.";
 	}
 
@@ -847,6 +849,9 @@ public class ShopScreen extends Screen {
 					* pixel / 2, top + 6, pixel, color);
 			break;
 		}
+		case EFFECT:
+			drawCometTrailPreview(centerX, top);
+			break;
 		default: {
 			Color color = itemColor(item);
 			int badge = 30;
@@ -905,6 +910,10 @@ public class ShopScreen extends Screen {
 			}
 			break;
 		}
+		case EFFECT:
+			lines.add(purchases.isOwned(item) ? "ON IN EVERY RUN"
+					: "LOOK ONLY - NO STAT CHANGE");
+			break;
 		default:
 			break;
 		}

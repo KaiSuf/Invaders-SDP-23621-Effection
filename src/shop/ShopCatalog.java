@@ -204,6 +204,11 @@ public final class ShopCatalog {
 			return name.toString();
 		}
 	}
+	private static ShopItem effect(final String effectId, final String name,
+	                               final String description, final int coins, final int diamonds) {
+		return new ShopItem("effect_" + effectId, name, description,
+				ShopCategory.EFFECT, coins, diamonds, 0, 0, 1, effectId);
+	}
 
 	private static ShopItem ship(final ShipType type,
 			final String description, final int coins) {
