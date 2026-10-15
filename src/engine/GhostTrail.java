@@ -2,35 +2,52 @@ package engine;
 
 import java.awt.Color;
 
-
 import engine.DrawManager.SpriteType;
 import entity.Ship;
+import shop.Skin;
 
 /**
  * Ghost Trail ship effect (shop item "effect_ghost_trail"). While the
  * player's ship moves, a few fading copies of it follow behind. When the
  * ship stops, the copies disappear. Look only, no gameplay change.
+ * <p>
+ * How it works: every frame {@link #draw} remembers the ship's position
+ * and skin colour in a small ring buffer, then draws ghosts at the
+ * positions from {@code GHOST_FRAMES} frames ago, each a bit more
+ * transparent ({@code GHOST_ALPHA}). Faster movement gives stronger
+ * ghosts. {@link #clear} empties the buffer; GameScreen calls it on
+ * pause, game over and level clear, and the trail clears itself while
+ * the ship is destroyed.
+ * <p>
+ * To tune the look, change the constants at the top of the class.
  * AUTHORED BY: VFX TEAM (Effection)
  */
 public final class GhostTrail {
 
 	/** How many past positions are remembered (one per frame). */
 	private static final int HISTORY = 17;
-    /** How many frames back each ghost is drawn, nearest first. */
+	/** How many frames back each ghost is drawn, nearest first. */
 	private static final int[] GHOST_FRAMES = { 4, 8, 12, 16 };
 	/** Opacity of each ghost (0-255), nearest first. */
 	private static final int[] GHOST_ALPHA = { 150, 115, 80, 45 };
-	/** Ghost colours, used in turn. */
-	private static final Color[] GHOST_COLORS = {
-			new Color(0, 220, 255), new Color(160, 90, 255) };
 	/** Pixels the ship must move over the history to count as moving. */
 	private static final int MIN_MOVE = 4;
 	/** Frames looked back to measure the ship's speed. */
 	private static final int SPEED_FRAMES = 4;
-   	/** Speed (pixels per frame) at which ghosts are fully visible. */
+	/** Speed (pixels per frame) at which ghosts are fully visible. */
 	private static final double FULL_SPEED = 4.0;
-   	/** How visible ghosts are at the slowest speed (0-1). */
+	/** How visible ghosts are at the slowest speed (0-1). */
 	private static final double MIN_STRENGTH = 0.4;
+	/** Shop preview: size of one sprite pixel on screen. */
+	private static final int PREVIEW_PIXEL = 3;
+	/** Shop preview: milliseconds per game frame (60 fps). */
+	private static final int PREVIEW_FRAME_MS = 16;
+	/** Shop preview: gap between the preview's top and the ship. */
+	private static final int PREVIEW_OFFSET_Y = 20;
+	/** Shop preview: time of one left-right slide, in milliseconds. */
+	private static final int PREVIEW_CYCLE_MS = 2400;
+	/** Shop preview: how far the ship slides each way, in pixels. */
+	private static final int PREVIEW_SWING = 36;
 
 	/** Past ship x positions, a ring buffer (no new objects per frame). */
 	private final int[] historyX = new int[HISTORY];
@@ -67,15 +84,16 @@ public final class GhostTrail {
 	public boolean isMoving() {
 		if (this.count < 2)
 			return false;
-		return Math.abs(this.historyX[this.newest] - this.historyX[slotFramesAgo(this.count - 1)]) >= MIN_MOVE;
+		return Math.abs(this.historyX[this.newest]
+				- this.historyX[slotFramesAgo(this.count - 1)]) >= MIN_MOVE;
 	}
 
 	/** Forgets every remembered position, so no ghosts show. */
 	public void clear() {
 		this.count = 0;
 	}
-	
-    /**
+
+	/**
 	 * Records the ship's position, then draws its ghosts behind it.
 	 * Call every frame, just before the ship is drawn.
 	 *
@@ -86,13 +104,13 @@ public final class GhostTrail {
 	 * @param shipColor
 	 *            Skin colour of the ship this frame; ghosts keep it.
 	 */
-	public void draw(final DrawManager drawManager, final Ship ship,final Color shipColor) {
+	public void draw(final DrawManager drawManager, final Ship ship,
+			final Color shipColor) {
 		// No ghosts while the ship is destroyed; start fresh after.
 		if (ship.isDestroyed()) {
 			clear();
 			return;
 		}
-		
 		record(ship.getPositionX(), ship.getPositionY(), shipColor);
 		if (!isMoving())
 			return;
@@ -106,20 +124,23 @@ public final class GhostTrail {
 			int alpha = (int) Math.round(GHOST_ALPHA[k] * strength);
 			drawManager.drawSprite(ship.getSpriteType(),
 					this.historyX[slot], this.historyY[slot],
-					new Color(base.getRed(), base.getGreen(), base.getBlue(), alpha));
+					new Color(base.getRed(), base.getGreen(),
+							base.getBlue(), alpha));
 		}
 	}
-	
+
 	/**
-   	 * @return How visible the ghosts are (0-1): faster ship, stronger
-   	 *         ghosts.
-   	 */
+	 * @return How visible the ghosts are (0-1): faster ship, stronger
+	 *         ghosts.
+	 */
 	private double speedStrength() {
 		int older = slotFramesAgo(SPEED_FRAMES);
 		if (older < 0)
 			return 1;
-		double speed = Math.abs(this.historyX[this.newest] - this.historyX[older]) / (double) SPEED_FRAMES;
-		return MIN_STRENGTH + (1 - MIN_STRENGTH) * Math.min(1, speed / FULL_SPEED);
+		double speed = Math.abs(this.historyX[this.newest]
+				- this.historyX[older]) / (double) SPEED_FRAMES;
+		return MIN_STRENGTH
+				+ (1 - MIN_STRENGTH) * Math.min(1, speed / FULL_SPEED);
 	}
 
 	/**
@@ -132,48 +153,49 @@ public final class GhostTrail {
 			return -1;
 		return (this.newest - frames + HISTORY) % HISTORY;
 	}
-    
+
 	/**
-	 * Shop preview: the ship slides left and right with its ghosts behind.
+	 * Shop preview in the skin's colours: each ghost uses the colour the
+	 * skin had when the ship was there, so animated skins flow along it.
 	 *
 	 * @param drawManager
 	 *            Draw manager.
 	 * @param sprite
 	 *            Ship sprite to show.
-	 * @param shipColor
-	 *            Ship colour (selected skin).
+	 * @param skin
+	 *            Selected skin.
 	 * @param centerX
 	 *            Horizontal centre of the preview.
 	 * @param top
 	 *            Top of the preview.
 	 */
 	public static void drawPreview(final DrawManager drawManager,
-			final SpriteType sprite, final Color shipColor,
-			final int centerX, final int top) {
-		final int pixel = 3;
-		final int frameMs = 16;
+			final SpriteType sprite, final Skin skin, final int centerX,
+			final int top) {
 		long now = System.currentTimeMillis();
-		int[] size = drawManager.getSpriteSize(sprite);
-		int shipY = top + 20;
+		int width = drawManager.getSpriteSize(sprite)[0] * PREVIEW_PIXEL;
+		int shipY = top + PREVIEW_OFFSET_Y;
 		for (int k = GHOST_FRAMES.length - 1; k >= 0; k--) {
-			Color base = GHOST_COLORS[k % GHOST_COLORS.length];
-			drawManager.drawSpriteScaled(sprite, previewX(centerX,
-					size[0] * pixel, now - GHOST_FRAMES[k] * frameMs), shipY,
-					pixel, new Color(base.getRed(), base.getGreen(),
+			long then = now - GHOST_FRAMES[k] * PREVIEW_FRAME_MS;
+			Color base = skin.colorAt(then);
+			drawManager.drawSpriteScaled(sprite, previewX(centerX, width,
+					then), shipY, PREVIEW_PIXEL,
+					new Color(base.getRed(), base.getGreen(),
 							base.getBlue(), GHOST_ALPHA[k]));
 		}
-		drawManager.drawSpriteScaled(sprite, previewX(centerX,
-				size[0] * pixel, now), shipY, pixel, shipColor);
+		drawManager.drawSpriteScaled(sprite, previewX(centerX, width, now),
+				shipY, PREVIEW_PIXEL, skin.colorAt(now));
 	}
 
 	/**
 	 * @return Left edge of the preview ship at a given time: it slides
-	 *         36 px each way and pauses at the ends.
+	 *         PREVIEW_SWING px each way and pauses at the ends.
 	 */
 	private static int previewX(final int centerX, final int width,
 			final long time) {
-		double phase = (time % 2400) / 2400.0 * 2 * Math.PI;
+		double phase = (time % PREVIEW_CYCLE_MS)
+				/ (double) PREVIEW_CYCLE_MS * 2 * Math.PI;
 		double s = Math.max(-1, Math.min(1, Math.sin(phase) * 1.4));
-		return centerX - width / 2 + (int) Math.round(s * 36);
+		return centerX - width / 2 + (int) Math.round(s * PREVIEW_SWING);
 	}
 }

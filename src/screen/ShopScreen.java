@@ -836,8 +836,7 @@ public class ShopScreen extends Screen {
 		if ("effect_ghost_trail".equals(item.getId())) {
 			engine.GhostTrail.drawPreview(this.drawManager,
 					purchases.getSelectedShip().getIdleSprite(),
-					purchases.getSelectedSkin().colorAt(
-							System.currentTimeMillis()), centerX, top);
+					purchases.getSelectedSkin(), centerX, top);
 			return;
 		}
 		switch (item.getCategory()) {
