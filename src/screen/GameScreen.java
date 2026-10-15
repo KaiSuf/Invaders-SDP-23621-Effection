@@ -851,8 +851,8 @@ public class GameScreen extends Screen {
 					SEPARATION_LINE_HEIGHT);
 					if (this.warpIn != null && this.warpIn.takeImpact())
 						this.screenShake.trigger();
-			// Ghost Trail behind the ship, gone once the level ends (game
-   			// over or level clear). AUTHORED BY: VFX TEAM (Effection)
+			// Ghost Trail behind the ship, gone once the level ends (game over or level clear).
+   			//  AUTHORED BY: VFX TEAM (Effection)
 			if (this.ghostTrail != null && this.levelFinished)
 				this.ghostTrail.clear();
 			else if (this.ghostTrail != null)
