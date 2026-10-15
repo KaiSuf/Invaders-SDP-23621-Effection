@@ -4,6 +4,8 @@ import java.awt.Color;
 
 import engine.DrawManager.SpriteType;
 import entity.Ship;
+import item.ItemAPI;
+import item.ItemSystem;
 import shop.Skin;
 
 /**
@@ -15,9 +17,10 @@ import shop.Skin;
  * and skin colour in a small ring buffer, then draws ghosts at the
  * positions from {@code GHOST_FRAMES} frames ago, each a bit more
  * transparent ({@code GHOST_ALPHA}). Faster movement gives stronger
- * ghosts. {@link #clear} empties the buffer; GameScreen calls it on
- * pause, game over and level clear, and the trail clears itself while
- * the ship is destroyed.
+* ghosts. While the boost item is active the trail surges: two extra
+ * ghosts and a brighter glow fade in. {@link #clear} empties the
+ * buffer; GameScreen calls it on pause, game over and level clear, and
+ * the trail clears itself while the ship is destroyed.
  * <p>
  * To tune the look, change the constants at the top of the class.
  * AUTHORED BY: VFX TEAM (Effection)
@@ -73,7 +76,7 @@ public final class GhostTrail {
 	private double glow;
 	/** How far the surge has faded in (0 = off, 1 = full). */
 	private double surgeLevel;
-	
+
 	/**
 	 * Remembers where the ship is this frame, and its colour. Call once
 	 * per frame.
@@ -108,26 +111,25 @@ public final class GhostTrail {
 		this.count = 0;
 		this.surgeLevel = 0;
 	}
-
+	
 	/**
-	 * Records the ship's position, then draws its ghosts behind it.
-	 * Call every frame, just before the ship is drawn.
-	 *
-	 * @param drawManager
-	 *            Draw manager.
-	 * @param ship
-	 *            Player ship.
-	 * @param shipColor
-	 *            Skin colour of the ship this frame; ghosts keep it.
+	 * @param items
+	 *            Item system of the run (Team CS), may be null.
+	 * @return True while the boost item is active.
 	 */
-	public void draw(final DrawManager drawManager, final Ship ship,
-			final Color shipColor) {
-		draw(drawManager, ship, shipColor, false);
+	public static boolean isBoosting(final ItemSystem items) {
+		if (items == null)
+			return false;
+		for (ItemAPI.EffectView effect : items.api().getView().effects)
+			if (effect.item.effectKind == ItemAPI.EffectKind.BOOST)
+				return true;
+		return false;
 	}
 
 	/**
-	 * Same as {@link #draw(DrawManager, Ship, Color)}, with a surge: while
-	 * surging, extra ghosts make the trail longer.
+	 * Records the ship's position, then draws its ghosts behind it.
+	 * Call every frame, just before the ship is drawn. While surging,
+	 * extra ghosts make the trail longer and brighter.
 	 *
 	 * @param drawManager
 	 *            Draw manager.

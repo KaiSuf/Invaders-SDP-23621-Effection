@@ -754,7 +754,8 @@ public class GameScreen extends Screen {
 				this.ghostTrail.clear();
 			else if (this.ghostTrail != null)
 				this.ghostTrail.draw(drawManager, this.ship,
-						this.skin.colorAt(System.currentTimeMillis()));
+						this.skin.colorAt(System.currentTimeMillis()),
+						engine.GhostTrail.isBoosting(this.items));
 			drawManager.drawEntity(this.ship, this.ship.getPositionX(),
 					this.ship.getPositionY());
 			drawManager.drawItemShield(this.ship, this.items); // Item System (Team CS)
