@@ -24,7 +24,7 @@ import shop.Skin;
 
 /**
  * The shop (GoG - Currency System). Five tabs: Ships, Skins, Upgrades,
- * Night Market and an empty Effects placeholder.
+ * Night Market and an Effects (VFX team) placeholder.
  * The left side lists what is for sale, the right side
  * shows the selected entry with its price and BUY buttons.
  *
@@ -308,7 +308,7 @@ public class ShopScreen extends Screen {
 			addAll(result, ShopCatalog.getByCategory(ShopCategory.UPGRADE));
 			break;
 		case EFFECTS:
-			// Empty placeholder; effects are not sold yet.
+			addAll(result, ShopCatalog.getByCategory(ShopCategory.EFFECT));
 			break;
 		default:
 			for (ShopItem item : NightMarket.getListings())
@@ -385,6 +385,8 @@ public class ShopScreen extends Screen {
 	private static String afterBuying(final ShopItem item) {
 		if (item.getCategory() == ShopCategory.UPGRADE)
 			return "It is on.";
+		if (item.getCategory() == ShopCategory.EFFECT)
+			return "It is on in every run.";
 		return "Choose it in Customize.";
 	}
 
@@ -816,6 +818,29 @@ public class ShopScreen extends Screen {
 	}
 
 	/**
+	 * Preview for an effect item, chosen by its effect id. Each effect
+	 * adds its own case. AUTHORED BY: VFX TEAM (Effection)
+	 *
+	 * @param item
+	 *            Effect item shown.
+	 * @param centerX
+	 *            Horizontal centre.
+	 * @param top
+	 *            Top of the preview.
+	 */
+	private void drawEffectPreview(final ShopItem item, final int centerX,
+	                               final int top) {
+		switch (item.getRef()) {
+			case "comet_trail":
+				drawCometTrailPreview(centerX, top);
+				break;
+			default:
+				drawCentered("PREVIEW SOON", centerX, top + 30, Color.GRAY);
+				break;
+		}
+	}
+
+	/**
 	 * Big picture of the entry: the ship, the ship in the skin's colour, or
 	 * an item badge in the Item System's colour for it.
 	 *
@@ -847,6 +872,9 @@ public class ShopScreen extends Screen {
 					* pixel / 2, top + 6, pixel, color);
 			break;
 		}
+		case EFFECT:
+			drawEffectPreview(item, centerX, top);
+			break;
 		default: {
 			Color color = itemColor(item);
 			int badge = 30;
@@ -905,6 +933,10 @@ public class ShopScreen extends Screen {
 			}
 			break;
 		}
+		case EFFECT:
+			lines.add(purchases.isOwned(item) ? "ON IN EVERY RUN"
+					: "LOOK ONLY - NO STAT CHANGE");
+			break;
 		default:
 			break;
 		}
