@@ -17,7 +17,7 @@ import shop.Skin;
  * and skin colour in a small ring buffer, then draws ghosts at the
  * positions from {@code GHOST_FRAMES} frames ago, each a bit more
  * transparent ({@code GHOST_ALPHA}). Faster movement gives stronger
-* ghosts. While the boost item is active the trail surges: two extra
+ * ghosts. While the boost item is active the trail surges: two extra
  * ghosts and a brighter glow fade in. {@link #clear} empties the
  * buffer; GameScreen calls it on pause, game over and level clear, and
  * the trail clears itself while the ship is destroyed.
@@ -111,7 +111,7 @@ public final class GhostTrail {
 		this.count = 0;
 		this.surgeLevel = 0;
 	}
-	
+
 	/**
 	 * @param items
 	 *            Item system of the run (Team CS), may be null.
