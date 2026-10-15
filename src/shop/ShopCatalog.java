@@ -217,6 +217,7 @@ public final class ShopCatalog {
 			return name.toString();
 		}
 	}
+<<<<<<< HEAD
 	/**
 	 * Effect item (VFX team, Effection): bought once, either currency.
 	 *
@@ -233,6 +234,8 @@ public final class ShopCatalog {
 	 * @return The shop entry.
 	 */
 
+=======
+>>>>>>> 7e5f107 (feat(shop): sell effect items in the Effects tab)
 	private static ShopItem effect(final String effectId, final String name,
 	                               final String description, final int coins, final int diamonds) {
 		return new ShopItem("effect_" + effectId, name, description,
