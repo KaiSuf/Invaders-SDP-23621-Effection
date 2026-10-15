@@ -26,6 +26,12 @@ public final class GhostTrail {
 			new Color(0, 220, 255), new Color(160, 90, 255) };
 	/** Pixels the ship must move over the history to count as moving. */
 	private static final int MIN_MOVE = 4;
+	/** Frames looked back to measure the ship's speed. */
+	private static final int SPEED_FRAMES = 4;
+   	/** Speed (pixels per frame) at which ghosts are fully visible. */
+	private static final double FULL_SPEED = 4.0;
+   	/** How visible ghosts are at the slowest speed (0-1). */
+	private static final double MIN_STRENGTH = 0.4;
 
 	/** Past ship positions, newest first: {x, y, colour as RGB}. */
 	private final ArrayDeque<int[]> history = new ArrayDeque<int[]>();
@@ -72,7 +78,6 @@ public final class GhostTrail {
 	 *            Skin colour of the ship this frame; ghosts keep it.
 	 */
 	public void draw(final DrawManager drawManager, final Ship ship,final Color shipColor) {
-		
 		// No ghosts while the ship is destroyed; start fresh after.
 		if (ship.isDestroyed()) {
 			clear();
@@ -82,16 +87,30 @@ public final class GhostTrail {
 		record(ship.getPositionX(), ship.getPositionY(), shipColor);
 		if (!isMoving())
 			return;
+		double strength = speedStrength();
 		// Farthest ghost first, so nearer ghosts are drawn on top.
 		for (int k = GHOST_FRAMES.length - 1; k >= 0; k--) {
 			int[] pos = positionFramesAgo(GHOST_FRAMES[k]);
 			if (pos == null)
 				continue;
 			Color base = new Color(pos[2]);
+			int alpha = (int) Math.round(GHOST_ALPHA[k] * strength);
 			drawManager.drawSprite(ship.getSpriteType(), pos[0], pos[1],
 					new Color(base.getRed(), base.getGreen(),
-							base.getBlue(), GHOST_ALPHA[k]));
+							base.getBlue(), alpha));
 		}
+	}
+	
+	/**
+   	 * @return How visible the ghosts are (0-1): faster ship, stronger
+   	 *         ghosts.
+   	 */
+	private double speedStrength() {
+		int[] older = positionFramesAgo(SPEED_FRAMES);
+		if (older == null)
+			return 1;
+		double speed = Math.abs(this.history.getFirst()[0] - older[0])/ (double) SPEED_FRAMES;
+		return MIN_STRENGTH + (1 - MIN_STRENGTH) * Math.min(1, speed / FULL_SPEED);
 	}
 
 	/**
