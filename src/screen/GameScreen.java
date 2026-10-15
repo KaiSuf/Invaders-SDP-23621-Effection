@@ -745,8 +745,11 @@ public class GameScreen extends Screen {
 			// Ship, enemies, bullets and falling coins are hidden while
 			// paused, so the pause menu isn't cluttered by the frozen
 			// battlefield behind it - only the top HUD stays visible.
-			// Ghost Trail behind the ship. AUTHORED BY: VFX TEAM (Effection)
-			if (this.ghostTrail != null)
+			// Ghost Trail behind the ship, gone once the level ends (game
+   			// over or level clear). AUTHORED BY: VFX TEAM (Effection)
+			if (this.ghostTrail != null && this.levelFinished)
+				this.ghostTrail.clear();
+			else if (this.ghostTrail != null)
 				this.ghostTrail.draw(drawManager, this.ship,
 						this.skin.colorAt(System.currentTimeMillis()));
 			drawManager.drawEntity(this.ship, this.ship.getPositionX(),
