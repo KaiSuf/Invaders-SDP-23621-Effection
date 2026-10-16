@@ -38,12 +38,13 @@
 # /src/engine/GameSettings.java        @1322528197ldy-tech
 
 # Team 6, Effection, Visual Effects
-/src/engine/DamageDimEffect.java     @KaiSuf
+/src/engine/DamageDimEffect.java     @KaiSuf @ariqiqnal
 /src/engine/GlitchEffect.java        @KaiSuf @alyafths
 /src/engine/ScreenShake.java         @KaiSuf @alyafths 
-/src/engine/GameEvents.java          @KaiSuf
+/src/engine/GameEvents.java          @KaiSuf @ariqiqbal
 /src/entity/Particle.java            @KaiSuf @dianpines
-/src/engine/PointsEffect.java         @KaiSuf @deluluclover
+/src/engine/PointsEffect.java        @KaiSuf @deluluclover
+/res/silkscreen/                     @Kaisuf @ariqiqbal
 /teams/Effection.md                  @KaiSuf
 /teams/Git-Workflow/Effection_Git-Workflow.md  @KaiSuf
 
