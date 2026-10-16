@@ -834,6 +834,13 @@ public class ShopScreen extends Screen {
 			case "comet_trail":
 				drawCometTrailPreview(centerX, top);
 				break;
+			case "ghost_trail":
+				engine.GhostTrail.drawPreview(this.drawManager,
+						PurchaseManager.getInstance().getSelectedShip()
+								.getIdleSprite(),
+						PurchaseManager.getInstance().getSelectedSkin(),
+						centerX, top);
+				break;
 			default:
 				drawCentered("PREVIEW SOON", centerX, top + 30, Color.GRAY);
 				break;
