@@ -153,6 +153,8 @@ public class GameScreen extends Screen {
 	private EnemyShipFormation enemyShipFormation;
 	/** Player's ship. */
 	private Ship ship;
+	/** Warp In effect, null if not bought. AUTHORED BY: VFX TEAM (Effection) */
+	private engine.WarpIn warpIn;
 	/** Bonus enemy ship that appears sometimes. */
 	private EnemyShip enemyShipSpecial;
 	/** Minimum time between bonus ship appearances. */
@@ -327,6 +329,12 @@ public class GameScreen extends Screen {
 		this.glitch = new GlitchEffect();
 		this.screenShake = new ScreenShake();
 		this.pointsEffect = new PointsEffect(SEPARATION_LINE_HEIGHT);
+		// Warp In, on in every run once bought. AUTHORED BY: VFX TEAM (Effection)
+		if (PurchaseManager.getInstance().isOwned(
+				shop.ShopCatalog.findById("effect_warp_in"))) {
+			this.warpIn = new engine.WarpIn();
+			this.warpIn.startLevel(INPUT_DELAY);
+		}
 		this.coins = new HashSet<Coin>();
 		this.achievementPopupQueue = new LinkedList<Achievement>();
 		this.coinDropManager = new CoinDropManager();
@@ -739,8 +747,13 @@ public class GameScreen extends Screen {
 			// Ship, enemies, bullets and falling coins are hidden while
 			// paused, so the pause menu isn't cluttered by the frozen
 			// battlefield behind it - only the top HUD stays visible.
-			drawManager.drawEntity(this.ship, this.ship.getPositionX(),
-					this.ship.getPositionY());
+			// Warp In draws the ship itself while it beams in. AUTHORED BY: VFX TEAM (Effection)
+			if (this.warpIn == null || !this.warpIn.update())
+				drawManager.drawEntity(this.ship, this.ship.getPositionX(),
+						this.ship.getPositionY());
+			drawManager.drawWarpIn(this.warpIn, this.ship,
+					this.skin.colorAt(System.currentTimeMillis()),
+					SEPARATION_LINE_HEIGHT);
 			drawManager.drawItemShield(this.ship, this.items); // Item System (Team CS)
 			if (this.enemyShipSpecial != null)
 				drawManager.drawEntity(this.enemyShipSpecial,

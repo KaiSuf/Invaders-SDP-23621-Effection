@@ -1641,6 +1641,23 @@ public final class DrawManager {
 			effect.draw(backBufferGraphics, screen.getWidth(), fontRegular);
 	}
 
+	/**
+	 * Draws the Warp In effect while the ship beams in.
+	 * AUTHORED BY: VFX TEAM (Effection)
+	 *
+	 * @param warpIn Warp In effect, may be null.
+	 * @param ship   Player ship.
+	 * @param color  Ship colour this frame.
+	 * @param topY   Top of the play area.
+	 */
+	public void drawWarpIn(final WarpIn warpIn, final Ship ship,
+			final Color color, final int topY) {
+		if (warpIn != null)
+			warpIn.draw((Graphics2D) backBufferGraphics,
+					spriteMap.get(ship.getType().getIdleSprite()), ship,
+					color, topY);
+	}
+
 	/** Point size of the small text used in the shop and Customize panels. */
 	private static final float SMALL_FONT_SIZE = 8f;
 	/** Small version of the regular game font, made on first use. */
