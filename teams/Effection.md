@@ -195,6 +195,14 @@ Provide reusable VFX components and libraries that can be easily accessed and us
 `PLAYER_SHOOT`, `ENEMY_SHOOT`, `PLAYER_HIT`, `ENEMY_HIT`, `ENEMY_DESTROYED`, `PLAYER_DESTROYED`, `LEVEL_COMPLETED`, `GAME_OVER`, and `STAGE_STARTED`.
 ```
 
+### 4. Shop Effects
+
+Cosmetic effects players can buy in the shop's **EFFECTS** tab. Bought once, on in every run. Look only, no gameplay change.
+
+| Effect | Price | What it does | Code |
+|--------|-------|--------------|------|
+| Warp In | 45 coins / 25 diamonds | The ship beams into the game at the start of each level (landing on "GO!") and, shorter, after a lost life: lock-on brackets, a rift opens, a beam strikes down, the ship rains in as a hologram, a scan line turns it solid, then an impact flash with light rays, ground rings, debris and a small screen shake. In the selected skin's colour; the shop shows a looping preview. | `src/engine/WarpIn.java` |
+
 ---
 
 
