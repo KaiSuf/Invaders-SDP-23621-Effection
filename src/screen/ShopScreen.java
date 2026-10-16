@@ -24,7 +24,7 @@ import shop.Skin;
 
 /**
  * The shop (GoG - Currency System). Five tabs: Ships, Skins, Upgrades,
- * Night Market and an empty Effects placeholder.
+ * Night Market and an Effects (VFX team) placeholder.
  * The left side lists what is for sale, the right side
  * shows the selected entry with its price and BUY buttons.
  *
@@ -818,6 +818,29 @@ public class ShopScreen extends Screen {
 	}
 
 	/**
+	 * Preview for an effect item, chosen by its effect id. Each effect
+	 * adds its own case. AUTHORED BY: VFX TEAM (Effection)
+	 *
+	 * @param item
+	 *            Effect item shown.
+	 * @param centerX
+	 *            Horizontal centre.
+	 * @param top
+	 *            Top of the preview.
+	 */
+	private void drawEffectPreview(final ShopItem item, final int centerX,
+	                               final int top) {
+		switch (item.getRef()) {
+			case "comet_trail":
+				drawCometTrailPreview(centerX, top);
+				break;
+			default:
+				drawCentered("PREVIEW SOON", centerX, top + 30, Color.GRAY);
+				break;
+		}
+	}
+
+	/**
 	 * Big picture of the entry: the ship, the ship in the skin's colour, or
 	 * an item badge in the Item System's colour for it.
 	 *
@@ -832,13 +855,6 @@ public class ShopScreen extends Screen {
 			final int top) {
 		PurchaseManager purchases = PurchaseManager.getInstance();
 		final int pixel = 3;
-		// Ghost Trail has its own preview. AUTHORED BY: VFX TEAM (Effection)
-		if ("effect_ghost_trail".equals(item.getId())) {
-			engine.GhostTrail.drawPreview(this.drawManager,
-					purchases.getSelectedShip().getIdleSprite(),
-					purchases.getSelectedSkin(), centerX, top);
-			return;
-		}
 		switch (item.getCategory()) {
 		case SHIP:
 		case SKIN: {
@@ -857,7 +873,7 @@ public class ShopScreen extends Screen {
 			break;
 		}
 		case EFFECT:
-			drawCometTrailPreview(centerX, top);
+			drawEffectPreview(item, centerX, top);
 			break;
 		default: {
 			Color color = itemColor(item);
