@@ -834,6 +834,13 @@ public class ShopScreen extends Screen {
 			case "comet_trail":
 				drawCometTrailPreview(centerX, top);
 				break;
+			case "warp_in":
+				this.drawManager.drawWarpInPreview(PurchaseManager
+						.getInstance().getSelectedShip().getIdleSprite(),
+						PurchaseManager.getInstance().getSelectedSkin()
+								.colorAt(System.currentTimeMillis()),
+						centerX, top);
+				break;
 			default:
 				drawCentered("PREVIEW SOON", centerX, top + 30, Color.GRAY);
 				break;

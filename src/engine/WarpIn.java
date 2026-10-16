@@ -140,6 +140,40 @@ public final class WarpIn {
 			drawWarp(g, image, ship.getPositionX(), ship.getPositionY(),color, topY, p, this.seed);
 	}
 
+	/**
+	 * Draws a looping warp for the shop preview, kept inside its box.
+	 *
+	 * @param g
+	 *            Graphics to draw on.
+	 * @param image
+	 *            Ship sprite.
+	 * @param color
+	 *            Ship colour.
+	 * @param centerX
+	 *            Centre of the preview.
+	 * @param top
+	 *            Top of the preview (the rift opens here).
+	 * @param height
+	 *            Height of the preview.
+	 */
+	public static void drawPreview(final Graphics2D g,final boolean[][] image, final Color color, final int centerX,
+			final int top, final int height) {
+		int cycle = START_DURATION + 700;
+		long now = System.currentTimeMillis();
+		double p = (now % cycle) / (double) START_DURATION;
+		int x = centerX - image.length;
+		int y = top + height - image[0].length * 2 - 4;
+		java.awt.Shape oldClip = g.getClip();
+		g.clipRect(centerX - 90, top - 4, 180, height + 4);
+		if (p >= IMPACT) {
+			g.setColor(color);
+			fillSprite(g, image, x, y);
+		}
+		if (p < 1)
+			drawWarp(g, image, x, y, color, top - 7, p, now / cycle);
+		g.setClip(oldClip);
+	}
+
 	/** Draws one moment (p = 0 to 1) of the warp, in order. */
 	private static void drawWarp(final Graphics2D g, final boolean[][] image,
 			final int x, final int y, final Color color, final int topY,
@@ -384,8 +418,7 @@ public final class WarpIn {
 
 	/** @return Colour a blended toward b by t (0-1). */
 	private static Color mix(final Color a, final Color b, final double t) {
-		return new Color((int) (a.getRed() + (b.getRed() - a.getRed()) * t),
-				(int) (a.getGreen() + (b.getGreen() - a.getGreen()) * t),
+		return new Color((int) (a.getRed() + (b.getRed() - a.getRed()) * t),(int) (a.getGreen() + (b.getGreen() - a.getGreen()) * t),
 				(int) (a.getBlue() + (b.getBlue() - a.getBlue()) * t));
 	}
 }

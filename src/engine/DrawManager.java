@@ -1657,6 +1657,21 @@ public final class DrawManager {
 					spriteMap.get(ship.getType().getIdleSprite()), ship,
 					color, topY);
 	}
+	
+	/**
+	 * Draws the looping Warp In preview for the shop.
+	 * AUTHORED BY: VFX TEAM (Effection)
+	 *
+	 * @param shipSprite Sprite of the selected ship.
+	 * @param color      Colour of the selected skin.
+	 * @param centerX    Centre of the preview.
+	 * @param top        Top of the preview.
+	 */
+	public void drawWarpInPreview(final SpriteType shipSprite,
+			final Color color, final int centerX, final int top) {
+		WarpIn.drawPreview((Graphics2D) backBufferGraphics,
+				spriteMap.get(shipSprite), color, centerX, top, 50);
+	}
 
 	/** Point size of the small text used in the shop and Customize panels. */
 	private static final float SMALL_FONT_SIZE = 8f;
