@@ -15,20 +15,24 @@ import java.util.Random;
 import entity.Ship;
 
 /**
- * Warp In ship effect (shop item "effect_warp_in"). The player's ship beams in at the start of each level: corner
+ * Warp In ship effect (shop item "effect_warp_in"). The player's ship beams in at the start of each level and after a lost life: corner
  * brackets lock on, a rift opens at the top, a beam strikes down, the ship rains in as a hologram, a scan line turns it solid, then an impact
  * flash with light rays, ground rings, debris and a small screen shake.
  * <p>
  * Everything is worked out from the warp's progress (0 to 1) and a random seed, so every frame can be drawn on its own. While the ship is not solid
  * yet the warp draws it and GameScreen skips the normal ship
- * ({@link #update} returns true). The ship turns solid on "GO!".
- * Look only.
+ * ({@link #update} returns true). Level start: the impact lands on "GO!".
+ * Respawn: a short warp ends as the ship stops being destroyed, so the ship is never hidden while it can be hit. Look only.
  * AUTHORED BY: VFX TEAM (Effection)
  */
 public final class WarpIn {
 
 	/** Length of the level start warp, in milliseconds. */
 	private static final int START_DURATION = 2200;
+	/** Length of the warp after a lost life, in milliseconds. */
+	private static final int RESPAWN_DURATION = 750;
+	/** How long the ship stays destroyed (see Ship), in milliseconds. */
+	private static final int SHIP_DESTROYED_TIME = 1000;
 	/** Time from "GO!" to the end of the countdown, in milliseconds. */
 	private static final int GO_TIME = 1000;
 	/** Timeline (parts of the warp): lock-on brackets close in. */
@@ -50,6 +54,8 @@ public final class WarpIn {
 	private int duration;
 	/** Seed for the current warp. */
 	private long seed;
+	/** Whether the ship was destroyed last frame (to spot a respawn). */
+	private boolean wasDestroyed;
 	/** Whether this warp's impact was reported (screen shake). */
 	private boolean impactTaken;
 
@@ -60,8 +66,7 @@ public final class WarpIn {
 	 *            Length of the level start countdown (INPUT_DELAY).
 	 */
 	public void startLevel(final int countdownMillis) {
-		plan(countdownMillis - GO_TIME - (long) (IMPACT * START_DURATION),
-				START_DURATION);
+		plan(countdownMillis - GO_TIME - (long) (IMPACT * START_DURATION),START_DURATION);
 	}
 
 	/** Plans a warp starting in {@code delay} ms, lasting {@code length}. */
@@ -74,18 +79,33 @@ public final class WarpIn {
 
 	/** @return Progress of the current warp (below 0 before it starts). */
 	private double progress() {
-		return (System.currentTimeMillis() - this.startTime)
-				/ (double) this.duration;
+		return (System.currentTimeMillis() - this.startTime)/ (double) this.duration;
 	}
 
 	/**
-	 * Says whether the warp hides the ship. Call once per frame, before
-	 * drawing the ship.
+	 * Watches the ship for a respawn and says whether the warp hides it.
+	 * Call once per frame, before drawing the ship.
 	 *
+	 * @param ship
+	 *            Player ship.
+	 * @param canRespawn
+	 *            False when the ship will not come back (no lives left).
 	 * @return True while the warp draws the ship instead of GameScreen.
 	 */
-	public boolean update() {
-		return this.startTime >= 0 && progress() < IMPACT;
+	public boolean update(final Ship ship, final boolean canRespawn) {
+		boolean destroyed = ship.isDestroyed();
+		if (destroyed && !this.wasDestroyed)
+			if (canRespawn)
+				plan(SHIP_DESTROYED_TIME - (long) (IMPACT * RESPAWN_DURATION), RESPAWN_DURATION);
+			else
+				this.startTime = -1;
+		this.wasDestroyed = destroyed;
+		if (this.startTime < 0)
+			return false;
+		double p = progress();
+		// Level start: hidden until the impact. Respawn: the wreck shows
+		// until the warp starts.
+		return p < IMPACT && (p >= 0 || !destroyed);
 	}
 
 	/** @return True once per warp, at the impact (to shake the screen). */
@@ -110,16 +130,14 @@ public final class WarpIn {
 	 * @param topY
 	 *            Top of the play area; the rift opens here.
 	 */
-	public void draw(final Graphics2D g, final boolean[][] image,
-			final Ship ship, final Color color, final int topY) {
+	public void draw(final Graphics2D g, final boolean[][] image,final Ship ship, final Color color, final int topY) {
 		if (this.startTime < 0 || image == null)
 			return;
 		double p = progress();
 		if (p >= 1)
 			this.startTime = -1;
 		else if (p >= 0)
-			drawWarp(g, image, ship.getPositionX(), ship.getPositionY(),
-					color, topY, p, this.seed);
+			drawWarp(g, image, ship.getPositionX(), ship.getPositionY(),color, topY, p, this.seed);
 	}
 
 	/** Draws one moment (p = 0 to 1) of the warp, in order. */
@@ -144,24 +162,19 @@ public final class WarpIn {
 			float glow = (float) Math.max(1, rw * 0.75);
 			g.setComposite(AlphaComposite.SrcOver);
 			g.setPaint(new RadialGradientPaint((float) cx, (float) riftY,
-					glow, new float[] { 0f, 1f }, new Color[] {
-							alpha(color, 110), alpha(color, 0) }));
-			g.fillOval((int) (cx - glow), (int) (riftY - glow * 0.35),
-					(int) (glow * 2), (int) (glow * 0.7));
+					glow, new float[] { 0f, 1f }, new Color[] {alpha(color, 110), alpha(color, 0) }));
+			g.fillOval((int) (cx - glow), (int) (riftY - glow * 0.35),(int) (glow * 2), (int) (glow * 0.7));
 			setAlpha(g, 0.9f);
 			g.setColor(color);
-			g.fillOval((int) (cx - rw / 2), (int) (riftY - rh / 2),
-					(int) rw, (int) Math.max(1, rh));
+			g.fillOval((int) (cx - rw / 2), (int) (riftY - rh / 2),(int) rw, (int) Math.max(1, rh));
 			g.setColor(new Color(10, 0, 20));
-			g.fillOval((int) (cx - rw / 2 + 3), (int) (riftY - rh / 2 + 2),
-					(int) Math.max(0, rw - 6), (int) Math.max(0, rh - 4));
+			g.fillOval((int) (cx - rw / 2 + 3), (int) (riftY - rh / 2 + 2),(int) Math.max(0, rw - 6), (int) Math.max(0, rh - 4));
 			Random crackle = new Random(seed + (long) (p * 60));
 			setAlpha(g, (float) open);
 			for (int i = 0; i < 6; i++) {
 				double a = crackle.nextDouble() * Math.PI * 2;
 				g.setColor(i % 2 == 0 ? Color.WHITE : light);
-				g.fillRect((int) (cx + Math.cos(a) * (rw / 2 + 2)),
-						(int) (riftY + Math.sin(a) * (rh / 2 + 2)), 2, 2);
+				g.fillRect((int) (cx + Math.cos(a) * (rw / 2 + 2)),(int) (riftY + Math.sin(a) * (rh / 2 + 2)), 2, 2);
 			}
 		}
 
@@ -184,18 +197,14 @@ public final class WarpIn {
 
 		// 3. Beam: strikes down from the rift, pulses, then thins away.
 		if (p >= STRIKE_START && p < IMPACT + 0.1) {
-			double bottom = riftY + (y + h - riftY)
-					* ease((p - STRIKE_START) / (STRIKE_END - STRIKE_START));
+			double bottom = riftY + (y + h - riftY) * ease((p - STRIKE_START) / (STRIKE_END - STRIKE_START));
 			double fade = p < IMPACT ? 1 : 1 - (p - IMPACT) / 0.1;
-			double width = p < RAIN_START ? 2 : p >= IMPACT ? 2 * fade
-					: 2 + w * 0.75 * Math.sin(Math.PI * (p - RAIN_START)
-							/ (IMPACT - RAIN_START));
+			double width = p < RAIN_START ? 2 : p >= IMPACT ? 2 * fade : 2 + w * 0.75 * Math.sin(Math.PI * (p - RAIN_START) / (IMPACT - RAIN_START));
 			float half = (float) (width / 2 + 10 * fade);
 			float in = (float) Math.min(0.9, width / 2 / half);
 			g.setComposite(AlphaComposite.SrcOver);
 			g.setPaint(new LinearGradientPaint((float) cx - half, 0,
-					(float) cx + half, 0, new float[] { 0f, 0.5f - in / 2,
-							0.5f, 0.5f + in / 2, 1f },
+					(float) cx + half, 0, new float[] { 0f, 0.5f - in / 2,0.5f, 0.5f + in / 2, 1f },
 					new Color[] { alpha(color, 0), alpha(color,
 							(int) (150 * fade)), alpha(light,
 							(int) (235 * fade)), alpha(color,
@@ -223,9 +232,7 @@ public final class WarpIn {
 				double r = r0 * (1 - ease(k));
 				setAlpha(g, (float) Math.sin(Math.PI * k));
 				g.setColor(i % 3 == 0 ? Color.WHITE : light);
-				g.fillRect((int) (cx + Math.cos(a0 + k * 2.6) * r),
-						(int) (y + h / 2 + Math.sin(a0 + k * 2.6) * r * 0.55),
-						2, 2);
+				g.fillRect((int) (cx + Math.cos(a0 + k * 2.6) * r),(int) (y + h / 2 + Math.sin(a0 + k * 2.6) * r * 0.55),2, 2);
 			}
 			int rows = image[0].length;
 			double scan = (p - SCAN_START) / (IMPACT - SCAN_START);
@@ -233,11 +240,9 @@ public final class WarpIn {
 			Random pixels = new Random(~seed);
 			for (int i = 0; i < image.length; i++)
 				for (int j = 0; j < rows; j++) {
-					double order = (rows - 1 - j) / (double) rows * 0.6
-							+ pixels.nextDouble() * 0.4;
+					double order = (rows - 1 - j) / (double) rows * 0.6 + pixels.nextDouble() * 0.4;
 					int drop = 20 + pixels.nextInt(50);
-					double k = (p - RAIN_START - order
-							* (RAIN_END - RAIN_START - PIXEL_FALL)) / PIXEL_FALL;
+					double k = (p - RAIN_START - order * (RAIN_END - RAIN_START - PIXEL_FALL)) / PIXEL_FALL;
 					if (!image[i][j] || k <= 0)
 						continue;
 					int px = x + i * 2;
@@ -269,8 +274,7 @@ public final class WarpIn {
 
 		// 5. Impact.
 		if (p >= IMPACT)
-			drawImpact(g, image, x, y, color, light,
-					(p - IMPACT) / (1 - IMPACT), seed);
+			drawImpact(g, image, x, y, color, light,(p - IMPACT) / (1 - IMPACT), seed);
 
 		g.setComposite(oldComposite);
 		g.setPaint(oldPaint);
@@ -281,8 +285,7 @@ public final class WarpIn {
 	 * Impact (k = 0 to 1): RGB split and white flash on the ship, light
 	 * rays fanning up, two rings on the ground and debris kicked up.
 	 */
-	private static void drawImpact(final Graphics2D g, final boolean[][] image,
-			final int x, final int y, final Color color, final Color light,
+	private static void drawImpact(final Graphics2D g, final boolean[][] image,final int x, final int y, final Color color, final Color light,
 			final double k, final long seed) {
 		int w = image.length * 2;
 		double cx = x + w / 2.0;
@@ -371,14 +374,12 @@ public final class WarpIn {
 
 	/** Sets how see-through the next drawings are (0-1). */
 	private static void setAlpha(final Graphics2D g, final float a) {
-		g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER,
-				Math.max(0f, Math.min(1f, a))));
+		g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER,Math.max(0f, Math.min(1f, a))));
 	}
 
 	/** @return The colour with a new alpha (0-255). */
 	private static Color alpha(final Color c, final int a) {
-		return new Color(c.getRed(), c.getGreen(), c.getBlue(),
-				Math.max(0, Math.min(255, a)));
+		return new Color(c.getRed(), c.getGreen(), c.getBlue(),Math.max(0, Math.min(255, a)));
 	}
 
 	/** @return Colour a blended toward b by t (0-1). */

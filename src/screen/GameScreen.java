@@ -748,7 +748,7 @@ public class GameScreen extends Screen {
 			// paused, so the pause menu isn't cluttered by the frozen
 			// battlefield behind it - only the top HUD stays visible.
 			// Warp In draws the ship itself while it beams in. AUTHORED BY: VFX TEAM (Effection)
-			if (this.warpIn == null || !this.warpIn.update())
+			if (this.warpIn == null|| !this.warpIn.update(this.ship, this.lives > 0))
 				drawManager.drawEntity(this.ship, this.ship.getPositionX(),
 						this.ship.getPositionY());
 			drawManager.drawWarpIn(this.warpIn, this.ship,
