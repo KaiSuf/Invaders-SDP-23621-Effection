@@ -1,31 +1,32 @@
 package engine;
- 
+
 import java.awt.AlphaComposite;
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Composite;
 import java.awt.Graphics2D;
 import java.awt.LinearGradientPaint;
 import java.awt.Paint;
 import java.awt.RadialGradientPaint;
+import java.awt.RenderingHints;
+import java.awt.Stroke;
 import java.util.Random;
- 
+
 import entity.Ship;
- 
+
 /**
- * Warp In ship effect (shop item "effect_warp_in"). The player's ship
- * beams in at the start of each level: corner
- * brackets lock on, a rift opens at the top, a beam strikes down, the
- * ship rains in as a hologram and a scan line turns it solid.
+ * Warp In ship effect (shop item "effect_warp_in"). The player's ship beams in at the start of each level: corner
+ * brackets lock on, a rift opens at the top, a beam strikes down, the ship rains in as a hologram, a scan line turns it solid, then an impact
+ * flash with light rays, ground rings, debris and a small screen shake.
  * <p>
- * Everything is worked out from the warp's progress (0 to 1) and a random
- * seed, so every frame can be drawn on its own. While the ship is not solid
+ * Everything is worked out from the warp's progress (0 to 1) and a random seed, so every frame can be drawn on its own. While the ship is not solid
  * yet the warp draws it and GameScreen skips the normal ship
  * ({@link #update} returns true). The ship turns solid on "GO!".
  * Look only.
  * AUTHORED BY: VFX TEAM (Effection)
  */
 public final class WarpIn {
- 
+
 	/** Length of the level start warp, in milliseconds. */
 	private static final int START_DURATION = 2200;
 	/** Time from "GO!" to the end of the countdown, in milliseconds. */
@@ -40,7 +41,7 @@ public final class WarpIn {
 	private static final double PIXEL_FALL = 0.12;
 	/** Timeline: the scan line sweeps up, then the ship is solid. */
 	private static final double SCAN_START = 0.6, IMPACT = 0.68;
- 
+
 	/** Random source; a new seed per warp so each one looks a bit new. */
 	private final Random random = new Random();
 	/** Moment the current warp starts, or -1 when none is planned. */
@@ -49,7 +50,9 @@ public final class WarpIn {
 	private int duration;
 	/** Seed for the current warp. */
 	private long seed;
- 
+	/** Whether this warp's impact was reported (screen shake). */
+	private boolean impactTaken;
+
 	/**
 	 * Plans the level start warp so the ship turns solid on "GO!".
 	 *
@@ -60,20 +63,21 @@ public final class WarpIn {
 		plan(countdownMillis - GO_TIME - (long) (IMPACT * START_DURATION),
 				START_DURATION);
 	}
- 
+
 	/** Plans a warp starting in {@code delay} ms, lasting {@code length}. */
 	private void plan(final long delay, final int length) {
 		this.startTime = System.currentTimeMillis() + Math.max(0, delay);
 		this.duration = length;
 		this.seed = this.random.nextLong();
+		this.impactTaken = false;
 	}
- 
+
 	/** @return Progress of the current warp (below 0 before it starts). */
 	private double progress() {
 		return (System.currentTimeMillis() - this.startTime)
 				/ (double) this.duration;
 	}
- 
+
 	/**
 	 * Says whether the warp hides the ship. Call once per frame, before
 	 * drawing the ship.
@@ -83,7 +87,15 @@ public final class WarpIn {
 	public boolean update() {
 		return this.startTime >= 0 && progress() < IMPACT;
 	}
- 
+
+	/** @return True once per warp, at the impact (to shake the screen). */
+	public boolean takeImpact() {
+		if (this.startTime < 0 || this.impactTaken || progress() < IMPACT)
+			return false;
+		this.impactTaken = true;
+		return true;
+	} 
+	
 	/**
 	 * Draws the warp, if one is running.
 	 *
@@ -109,19 +121,20 @@ public final class WarpIn {
 			drawWarp(g, image, ship.getPositionX(), ship.getPositionY(),
 					color, topY, p, this.seed);
 	}
- 
+
 	/** Draws one moment (p = 0 to 1) of the warp, in order. */
 	private static void drawWarp(final Graphics2D g, final boolean[][] image,
 			final int x, final int y, final Color color, final int topY,
 			final double p, final long seed) {
 		Composite oldComposite = g.getComposite();
 		Paint oldPaint = g.getPaint();
+		Stroke oldStroke = g.getStroke();
 		Color light = mix(color, Color.WHITE, 0.55);
 		int w = image.length * 2;
 		int h = image[0].length * 2;
 		double cx = x + w / 2.0;
 		double riftY = topY + 10;
- 
+
 		// 1. Rift: a glowing tear that opens, crackles and closes.
 		double open = p < IMPACT ? ease((p - 0.04) / (STRIKE_START - 0.04))
 				: 1 - ease((p - IMPACT) / 0.18);
@@ -151,7 +164,7 @@ public final class WarpIn {
 						(int) (riftY + Math.sin(a) * (rh / 2 + 2)), 2, 2);
 			}
 		}
- 
+
 		// 2. Lock-on: corner brackets blink and close in, then fade.
 		double lockFade = 1 - (p - LOCK_END) / (STRIKE_END - LOCK_END);
 		double q = Math.min(1, p / LOCK_END);
@@ -168,7 +181,7 @@ public final class WarpIn {
 				g.fillRect(bx, sy < 0 ? by : by - 4, 2, 6);
 			}
 		}
- 
+
 		// 3. Beam: strikes down from the rift, pulses, then thins away.
 		if (p >= STRIKE_START && p < IMPACT + 0.1) {
 			double bottom = riftY + (y + h - riftY)
@@ -195,7 +208,7 @@ public final class WarpIn {
 			if (p < STRIKE_END + 0.03)
 				g.fillRect((int) cx - 3, (int) bottom - 3, 6, 6);
 		}
- 
+
 		// 4. Sparks swirl in, and the ship rains in as a hologram that a
 		// scan line turns solid from the bottom up.
 		if (p >= RAIN_START && p < IMPACT) {
@@ -253,29 +266,121 @@ public final class WarpIn {
 				g.fillRect(x - 4, (int) (y + scanRow * 2), w + 8, 1);
 			}
 		}
- 
+
+		// 5. Impact.
+		if (p >= IMPACT)
+			drawImpact(g, image, x, y, color, light,
+					(p - IMPACT) / (1 - IMPACT), seed);
+
 		g.setComposite(oldComposite);
 		g.setPaint(oldPaint);
+		g.setStroke(oldStroke);
 	}
- 
+
+	/**
+	 * Impact (k = 0 to 1): RGB split and white flash on the ship, light
+	 * rays fanning up, two rings on the ground and debris kicked up.
+	 */
+	private static void drawImpact(final Graphics2D g, final boolean[][] image,
+			final int x, final int y, final Color color, final Color light,
+			final double k, final long seed) {
+		int w = image.length * 2;
+		double cx = x + w / 2.0;
+		double ground = y + image[0].length * 2;
+		if (k < 0.25) {
+			int off = (int) Math.round(4 * (1 - k / 0.25));
+			setAlpha(g, (float) (0.7 * (1 - k / 0.25)));
+			g.setColor(new Color(255, 40, 90));
+			fillSprite(g, image, x - off, y);
+			g.setColor(new Color(40, 220, 255));
+			fillSprite(g, image, x + off, y);
+		}
+		setAlpha(g, (float) Math.max(0, 1 - k * 3));
+		g.setColor(Color.WHITE);
+		fillSprite(g, image, x, y);
+
+		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+				RenderingHints.VALUE_ANTIALIAS_ON);
+		if (k < 0.5) {
+			double rk = k / 0.5;
+			float reach = (float) (40 + 70 * ease(rk * 1.4));
+			g.setComposite(AlphaComposite.SrcOver);
+			g.setPaint(new RadialGradientPaint((float) cx, (float) ground,
+					reach, new float[] { 0f, 0.35f, 1f }, new Color[] {
+							alpha(Color.WHITE, (int) (230 * (1 - rk))),
+							alpha(light, (int) (140 * (1 - rk))),
+							alpha(color, 0) }));
+			Random rays = new Random(seed * 7);
+			for (int i = 0; i < 13; i++) {
+				double a = Math.PI * (1.05 + 0.9 * i / 12)
+						+ (rays.nextDouble() - 0.5) * 0.12;
+				double len = reach * (0.55 + rays.nextDouble() * 0.45);
+				double s = i % 2 == 0 ? 0.075 : 0.04;
+				g.fillPolygon(new int[] { (int) cx,
+						(int) (cx + Math.cos(a - s) * len),
+						(int) (cx + Math.cos(a + s) * len) },
+						new int[] { (int) ground - 2,
+								(int) (ground + Math.sin(a - s) * len),
+								(int) (ground + Math.sin(a + s) * len) }, 3);
+			}
+		}
+		for (int ring = 0; ring < 2; ring++) {
+			double rk = (k - ring * 0.12) / 0.75;
+			if (rk <= 0 || rk >= 1)
+				continue;
+			double rr = 6 + 60 * ease(rk);
+			setAlpha(g, (float) (1 - rk));
+			g.setStroke(new BasicStroke(ring == 0 ? 2.5f : 1.5f));
+			g.setColor(ring == 0 ? light : color);
+			g.drawOval((int) (cx - rr), (int) (ground - rr * 0.25),
+					(int) (rr * 2), (int) (rr * 0.5));
+		}
+		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+				RenderingHints.VALUE_ANTIALIAS_OFF);
+
+		Random debris = new Random(seed * 13);
+		double t = k * 60;
+		for (int i = 0; i < 26; i++) {
+			double vx = (debris.nextDouble() - 0.5) * 4;
+			double vy = -(1.6 + debris.nextDouble() * 2.6);
+			double life = 0.6 + debris.nextDouble() * 0.4;
+			double dx = cx + (debris.nextDouble() - 0.5) * w + vx * t;
+			double dy = ground + vy * t + 0.09 * t * t;
+			if (k > life || dy > ground)
+				continue;
+			setAlpha(g, (float) (1 - k / life));
+			g.setColor(i % 3 == 0 ? Color.WHITE : i % 3 == 1 ? light : color);
+			g.fillRect((int) dx, (int) dy, i % 3 == 0 ? 3 : 2, 2);
+		}
+	}
+
+	/** Fills every pixel of a sprite at the game's 2x scale. */
+	private static void fillSprite(final Graphics2D g,
+			final boolean[][] image, final int x, final int y) {
+		for (int i = 0; i < image.length; i++)
+			for (int j = 0; j < image[i].length; j++)
+				if (image[i][j])
+					g.fillRect(x + i * 2, y + j * 2, 2, 2);
+	}
+
 	/** Ease-out curve, fast then soft (input clamped to 0-1). */
 	private static double ease(final double t) {
 		double u = 1 - Math.max(0, Math.min(1, t));
 		return 1 - u * u * u;
 	}
- 
+
 	/** Sets how see-through the next drawings are (0-1). */
 	private static void setAlpha(final Graphics2D g, final float a) {
 		g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER,
 				Math.max(0f, Math.min(1f, a))));
 	}
- 
+
 	/** @return The colour with a new alpha (0-255). */
 	private static Color alpha(final Color c, final int a) {
 		return new Color(c.getRed(), c.getGreen(), c.getBlue(),
 				Math.max(0, Math.min(255, a)));
 	}
- 
+
 	/** @return Colour a blended toward b by t (0-1). */
 	private static Color mix(final Color a, final Color b, final double t) {
 		return new Color((int) (a.getRed() + (b.getRed() - a.getRed()) * t),

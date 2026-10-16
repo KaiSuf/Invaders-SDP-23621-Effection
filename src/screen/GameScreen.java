@@ -754,6 +754,8 @@ public class GameScreen extends Screen {
 			drawManager.drawWarpIn(this.warpIn, this.ship,
 					this.skin.colorAt(System.currentTimeMillis()),
 					SEPARATION_LINE_HEIGHT);
+					if (this.warpIn != null && this.warpIn.takeImpact())
+						this.screenShake.trigger();
 			drawManager.drawItemShield(this.ship, this.items); // Item System (Team CS)
 			if (this.enemyShipSpecial != null)
 				drawManager.drawEntity(this.enemyShipSpecial,
