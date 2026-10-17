@@ -19,7 +19,9 @@ import screen.MenuItem;
 import screen.Screen;
 import screen.Starfield;
 import entity.Coin;
+import entity.DiamondDrop;
 import entity.Entity;
+import entity.Meteor;
 import entity.Particle;
 import entity.Ship;
 import item.ItemAPI;
@@ -377,6 +379,16 @@ public final class DrawManager {
 				coin.getHeight());
 	}
 
+	/** Draws the bonus meteor. AUTHORED BY: VFX TEAM (Effection) */
+	public void drawMeteor(final Meteor meteor) {
+		MeteorManager.drawMeteor(backBufferGraphics, meteor);
+	}
+
+	/** Draws a meteor diamond. AUTHORED BY: VFX TEAM (Effection) */
+	public void drawDiamondDrop(final DiamondDrop drop) {
+		MeteorManager.drawDiamond(backBufferGraphics, drop, fontRegular);
+	}
+	
 	/**
 	 * Draws the item drops on the field (Team CS - Item System). Drops have
 	 * no entry in the shared sprite file yet, so the item system draws
@@ -930,13 +942,36 @@ public final class DrawManager {
 			return null;
 		int spacing = menuItemSpacing();
 		for (MenuItem item : MenuItem.values()) {
-			int top = menuItemBaseline(screen, item.ordinal())
-					- fontRegularMetrics.getAscent()
-					- (spacing - fontRegularMetrics.getHeight()) / 2;
-			if (positionY >= top && positionY < top + spacing)
+			if (isOnMenuRow(menuItemBaseline(screen, item.ordinal()),
+					spacing, positionY))
 				return item;
 		}
 		return null;
+	}
+
+	/**
+	 * Checks whether a height falls on a row of regular text. The row is
+	 * centred on the text and as tall as the gap to the next row, so rows
+	 * touch and the whole width is hoverable, not just the glyphs. Screens
+	 * pass the same baseline they draw at, so drawing and hit-testing
+	 * cannot drift apart.
+	 *
+	 * @param baseline
+	 *            Baseline the row's text is drawn at.
+	 * @param rowHeight
+	 *            Distance between this row and the next one.
+	 * @param positionY
+	 *            Height to check, in screen coordinates.
+	 * @return True if the height is on the row, false otherwise or if
+	 *         nothing has been drawn yet.
+	 */
+	public boolean isOnMenuRow(final int baseline, final int rowHeight,
+			final int positionY) {
+		if (fontRegularMetrics == null)
+			return false;
+		int top = baseline - fontRegularMetrics.getAscent()
+				- (rowHeight - fontRegularMetrics.getHeight()) / 2;
+		return positionY >= top && positionY < top + rowHeight;
 	}
 
 	/**
@@ -1588,13 +1623,19 @@ public final class DrawManager {
 	public void drawMenuRow(final Screen screen, final String string,
 							final int height, final boolean selected,
 							final boolean enabled) {
-		if (selected)
+		if (selected) {
+			String text = "> " + string + " <";
 			backBufferGraphics.setColor(Color.GREEN);
-		else if (!enabled)
-			backBufferGraphics.setColor(Color.DARK_GRAY);
-		else
-			backBufferGraphics.setColor(Color.WHITE);
-		drawCenteredRegularString(screen, string, height);
+			backBufferGraphics.setFont(fontSelected);
+			backBufferGraphics.drawString(text,
+					(screen.getWidth()
+							- fontSelectedMetrics.stringWidth(text)) / 2,
+					height);
+		} else {
+			backBufferGraphics.setColor(
+					enabled ? Color.WHITE : Color.DARK_GRAY);
+			drawCenteredRegularString(screen, string, height);
+		}
 	}
 
 	/**
