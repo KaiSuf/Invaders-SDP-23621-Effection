@@ -386,7 +386,7 @@ public class ShopScreen extends Screen {
 		if (item.getCategory() == ShopCategory.UPGRADE)
 			return "It is on.";
 		if (item.getCategory() == ShopCategory.EFFECT)
-			return "It is on in every run.";
+			return "It is on. Switch it off in Customize.";
 		return "Choose it in Customize.";
 	}
 
@@ -934,7 +934,7 @@ public class ShopScreen extends Screen {
 			break;
 		}
 		case EFFECT:
-			lines.add(purchases.isOwned(item) ? "ON IN EVERY RUN"
+			lines.add(purchases.isOwned(item) ? "SWITCH ON/OFF IN CUSTOMIZE"
 					: "LOOK ONLY - NO STAT CHANGE");
 			break;
 		default:
