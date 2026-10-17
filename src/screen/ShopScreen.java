@@ -23,8 +23,9 @@ import shop.ShopItem;
 import shop.Skin;
 
 /**
- * The shop (GoG - Currency System). Four tabs: Ships, Skins, Upgrades and
- * the Night Market. The left side lists what is for sale, the right side
+ * The shop (GoG - Currency System). Five tabs: Ships, Skins, Upgrades,
+ * Night Market and an Effects (VFX team) placeholder.
+ * The left side lists what is for sale, the right side
  * shows the selected entry with its price and BUY buttons.
  *
  * Skins and upgrades can be paid with coins or diamonds, so they get one
@@ -50,7 +51,9 @@ public class ShopScreen extends Screen {
 		/** Item team upgrades. */
 		UPGRADES("Upgrades", new Color(255, 200, 0)),
 		/** Today's discounts. */
-		NIGHT_MARKET("Night Mkt", new Color(255, 80, 255));
+		NIGHT_MARKET("Night Mkt", new Color(255, 80, 255)),
+		/** Placeholder for visual effects. */
+		EFFECTS("Effects", new Color(255, 140, 0));
 
 		/** Text on the tab. */
 		private final String title;
@@ -304,6 +307,9 @@ public class ShopScreen extends Screen {
 		case UPGRADES:
 			addAll(result, ShopCatalog.getByCategory(ShopCategory.UPGRADE));
 			break;
+		case EFFECTS:
+			addAll(result, ShopCatalog.getByCategory(ShopCategory.EFFECT));
+			break;
 		default:
 			for (ShopItem item : NightMarket.getListings())
 				result.add(new Entry(item, true));
@@ -379,6 +385,8 @@ public class ShopScreen extends Screen {
 	private static String afterBuying(final ShopItem item) {
 		if (item.getCategory() == ShopCategory.UPGRADE)
 			return "It is on.";
+		if (item.getCategory() == ShopCategory.EFFECT)
+			return "It is on. Switch it off in Customize.";
 		return "Choose it in Customize.";
 	}
 
@@ -523,6 +531,10 @@ public class ShopScreen extends Screen {
 
 	private void drawList() {
 		if (this.entries.isEmpty()) {
+			if (this.tab == Tab.EFFECTS) {
+				drawEffectsPlaceholderRow();
+				return;
+			}
 			this.drawManager.drawSmallString("Nothing for sale here.",
 					MARGIN + 6, bodyTop() + 18, Color.GRAY);
 			return;
@@ -628,8 +640,11 @@ public class ShopScreen extends Screen {
 		Rectangle area = detailArea();
 		this.drawManager.drawBox(area.x, area.y, area.width, area.height,
 				BORDER);
-		if (this.entries.isEmpty())
+		if (this.entries.isEmpty()) {
+			if (this.tab == Tab.EFFECTS)
+				drawEffectsPlaceholderDetail(area);
 			return;
+		}
 
 		Entry entry = this.entries.get(this.selected);
 		ShopItem item = entry.item;
@@ -714,6 +729,118 @@ public class ShopScreen extends Screen {
 	}
 
 	/**
+	 * Placeholder row in the Effects tab until effects are sold.
+	 * AUTHORED BY: VFX TEAM (Effection)
+	 */
+	private void drawEffectsPlaceholderRow() {
+		Rectangle row = rowArea(0);
+		this.drawManager.drawBox(row.x, row.y, row.width, row.height,
+				BORDER);
+		this.drawManager.drawSmallString("COMET TRAIL", row.x + 8,
+				row.y + 18, Color.GRAY);
+		String soon = "SOON";
+		this.drawManager.drawSmallString(soon, row.x + row.width - 8
+				- this.drawManager.getSmallStringWidth(soon), row.y + 18,
+				Tab.EFFECTS.color);
+	}
+
+	/**
+	 * Placeholder detail panel in the Effects tab until effects are sold.
+	 * AUTHORED BY: VFX TEAM (Effection)
+	 *
+	 * @param area
+	 *            Detail panel area.
+	 */
+	private void drawEffectsPlaceholderDetail(final Rectangle area) {
+		int centerX = area.x + area.width / 2;
+		String name = "Comet Trail";
+		this.drawManager.drawRegularString(name, centerX
+				- this.drawManager.getRegularStringWidth(name) / 2,
+				area.y + 22, Tab.EFFECTS.color);
+		drawCometTrailPreview(centerX, area.y + 36);
+		int y = area.y + 94;
+		drawCentered("BULLET EFFECT", centerX, y, Color.GRAY);
+		y += this.drawManager.getSmallLineHeight() + 4;
+		drawCentered("COMING SOON", centerX, y, Color.WHITE);
+	}
+
+	/** Trail colours, hot to cool. AUTHORED BY: VFX TEAM (Effection) */
+	private static final Color[] TRAIL_COLORS = {
+			new Color(255, 214, 64), new Color(255, 170, 40),
+			new Color(255, 140, 26), new Color(224, 80, 26),
+			new Color(168, 50, 14) };
+
+	/**
+	 * Animated preview: the selected ship fires one bullet with a comet
+	 * trail, looping. AUTHORED BY: VFX TEAM (Effection)
+	 *
+	 * @param centerX
+	 *            Horizontal centre of the preview.
+	 * @param top
+	 *            Top of the preview.
+	 */
+	private void drawCometTrailPreview(final int centerX, final int top) {
+		PurchaseManager purchases = PurchaseManager.getInstance();
+		long now = System.currentTimeMillis();
+		final int pixel = 3;
+
+		// Ship in the selected skin colour.
+		SpriteType shipSprite = purchases.getSelectedShip().getIdleSprite();
+		int[] size = this.drawManager.getSpriteSize(shipSprite);
+		int shipY = top + 26;
+		this.drawManager.drawSpriteScaled(shipSprite,
+				centerX - size[0] * pixel / 2, shipY, pixel,
+				purchases.getSelectedSkin().colorAt(now));
+
+		// Bullet flies up 26 px, then loops (700 ms).
+		float k = (now % 700) / 700f;
+		int bulletX = centerX - 3;
+		int bulletY = shipY - 10 - (int) (k * 26);
+
+		// Trail: small fading blocks under the bullet.
+		for (int i = TRAIL_COLORS.length; i >= 1; i--) {
+			int trailY = bulletY + 10 + (i - 1) * 4;
+			if (trailY + 4 > shipY - 1)
+				continue;
+			Color base = TRAIL_COLORS[i - 1];
+			int alpha = (int) (200 * (1f - i / (TRAIL_COLORS.length + 1f)));
+			int w = Math.max(2, 6 - i);
+			this.drawManager.fillBox(centerX - w / 2, trailY, w, 4,
+					new Color(base.getRed(), base.getGreen(),
+							base.getBlue(), alpha));
+		}
+
+		// Soft glow + bright bullet.
+		this.drawManager.fillBox(bulletX - 2, bulletY - 2, 10, 14,
+				new Color(255, 176, 64, 80));
+		this.drawManager.drawSpriteScaled(SpriteType.Bullet, bulletX,
+				bulletY, 2, new Color(255, 246, 208));
+	}
+
+	/**
+	 * Preview for an effect item, chosen by its effect id. Each effect
+	 * adds its own case. AUTHORED BY: VFX TEAM (Effection)
+	 *
+	 * @param item
+	 *            Effect item shown.
+	 * @param centerX
+	 *            Horizontal centre.
+	 * @param top
+	 *            Top of the preview.
+	 */
+	private void drawEffectPreview(final ShopItem item, final int centerX,
+	                               final int top) {
+		switch (item.getRef()) {
+			case "comet_trail":
+				drawCometTrailPreview(centerX, top);
+				break;
+			default:
+				drawCentered("PREVIEW SOON", centerX, top + 30, Color.GRAY);
+				break;
+		}
+	}
+
+	/**
 	 * Big picture of the entry: the ship, the ship in the skin's colour, or
 	 * an item badge in the Item System's colour for it.
 	 *
@@ -745,6 +872,9 @@ public class ShopScreen extends Screen {
 					* pixel / 2, top + 6, pixel, color);
 			break;
 		}
+		case EFFECT:
+			drawEffectPreview(item, centerX, top);
+			break;
 		default: {
 			Color color = itemColor(item);
 			int badge = 30;
@@ -803,6 +933,10 @@ public class ShopScreen extends Screen {
 			}
 			break;
 		}
+		case EFFECT:
+			lines.add(purchases.isOwned(item) ? "SWITCH ON/OFF IN CUSTOMIZE"
+					: "LOOK ONLY - NO STAT CHANGE");
+			break;
 		default:
 			break;
 		}
