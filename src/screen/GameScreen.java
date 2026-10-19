@@ -255,6 +255,8 @@ public class GameScreen extends Screen {
 	private MeteorManager meteors;
 	/** Points shown when enemies are destroyed. AUTHORED BY: VFX TEAM (Effection) */
 	private PointsEffect pointsEffect;
+	/** Ghost Trail ship effect, null if not owned. AUTHORED BY: VFX TEAM (Effection) */
+	private engine.GhostTrail ghostTrail;
 	/** Diamonds earned this run but not yet cashed out; lost on death,
 	 * banked into DiamondManager only when the player cashes out. */
 	private int pendingDiamonds;
@@ -386,6 +388,10 @@ public class GameScreen extends Screen {
 		this.screenShake = new ScreenShake();
 		this.meteors = new MeteorManager(this.level, this.width, this.height,SEPARATION_LINE_HEIGHT);
 		this.pointsEffect = new PointsEffect(SEPARATION_LINE_HEIGHT);
+		// Ghost Trail, on in every run once bought. AUTHORED BY: VFX TEAM (Effection)
+		if (engine.PurchaseManager.getInstance().isOwned(
+				shop.ShopCatalog.findById("effect_ghost_trail")))
+			this.ghostTrail = new engine.GhostTrail();
 		this.scoreBoostPopups = new ArrayList<long[]>(); // Item System (Team CS)
 		this.coins = new HashSet<Coin>();
 		this.coinsCollectedThisLevel = 0;
@@ -463,6 +469,9 @@ public class GameScreen extends Screen {
 				&& this.pauseKeyCooldown.checkFinished()) {
 			this.paused = !this.paused;
 			this.pauseKeyCooldown.reset();
+			// Ghost Trail starts fresh after a pause. AUTHORED BY: VFX TEAM (Effection)
+			if (this.ghostTrail != null)
+				this.ghostTrail.clear();
 			this.pauseSelection = PauseOption.RESUME;
 			this.logger.info(this.paused ? "Game paused" : "Game resumed");
 		}
@@ -828,6 +837,14 @@ public class GameScreen extends Screen {
 			// Ship, enemies, bullets and falling coins are hidden while
 			// paused, so the pause menu isn't cluttered by the frozen
 			// battlefield behind it - only the top HUD stays visible.
+			// Ghost Trail behind the ship, gone once the level ends (game
+   			// over or level clear). AUTHORED BY: VFX TEAM (Effection)
+			if (this.ghostTrail != null && this.levelFinished)
+				this.ghostTrail.clear();
+			else if (this.ghostTrail != null)
+				this.ghostTrail.draw(drawManager, this.ship,
+						this.skin.colorAt(System.currentTimeMillis()),
+						engine.GhostTrail.isBoosting(this.items));
 			drawManager.drawEntity(this.ship, this.ship.getPositionX(),
 					this.ship.getPositionY());
 			drawManager.drawItemShield(this.ship, this.items); // Item System (Team CS)
