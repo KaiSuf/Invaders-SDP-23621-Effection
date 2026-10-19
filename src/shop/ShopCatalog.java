@@ -101,6 +101,9 @@ public final class ShopCatalog {
 
 		// Effects (VFX team, Effection): bought once, either currency.
 		// Each effect PR adds its own line here with effect(...).
+		items.add(effect("lightning_chain", "Lightning Chain", "Kills chain"
+				+ " lightning to nearby enemies. Streaks turn it violet,"
+				+ " then gold. Look only.", 60, 30));
 
 		ITEMS = Collections.unmodifiableList(items);
 	}

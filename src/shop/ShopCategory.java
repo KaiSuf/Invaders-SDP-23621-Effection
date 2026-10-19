@@ -22,10 +22,10 @@ public enum ShopCategory {
 	 */
 	UPGRADE("Upgrade"),
 	/**
-	 * Bullet effect (VFX team, Effection). Bought once, on in every run
+	 * Visual effect (VFX team, Effection). Bought once, on in every run
 	 * once bought. Look only, no stat change.
 	 */
-	EFFECT("Bullet effect");
+	EFFECT("Effect");
 
 	/** Label shown in the shop's detail panel. */
 	private final String label;
