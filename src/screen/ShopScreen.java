@@ -24,7 +24,7 @@ import shop.Skin;
 
 /**
  * The shop (GoG - Currency System). Five tabs: Ships, Skins, Upgrades,
- * Night Market and an Effects (VFX team) placeholder.
+ *  Effects (VFX team) and Night Market Place Holder.
  * The left side lists what is for sale, the right side
  * shows the selected entry with its price and BUY buttons.
  *
@@ -50,10 +50,11 @@ public class ShopScreen extends Screen {
 		SKINS("Skins", Color.CYAN),
 		/** Item team upgrades. */
 		UPGRADES("Upgrades", new Color(255, 200, 0)),
-		/** Today's discounts. */
-		NIGHT_MARKET("Night Mkt", new Color(255, 80, 255)),
 		/** Placeholder for visual effects. */
-		EFFECTS("Effects", new Color(255, 140, 0));
+		EFFECTS("Effects", new Color(255, 140, 0)),
+		/** Today's discounts. */
+		NIGHT_MARKET("Night Mkt", new Color(255, 80, 255));
+		
 
 		/** Text on the tab. */
 		private final String title;
