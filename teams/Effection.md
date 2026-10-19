@@ -202,6 +202,7 @@ Cosmetic effects players can buy in the shop's **EFFECTS** tab. Bought once, on 
 | Effect | Price | What it does | Code |
 |--------|-------|--------------|------|
 | Warp In | 45 coins / 25 diamonds | The ship beams into the game at the start of each level (landing on "GO!") and, shorter, after a lost life: lock-on brackets, a rift opens, a beam strikes down, the ship rains in as a hologram, a scan line turns it solid, then an impact flash with light rays, ground rings, debris and a small screen shake. In the selected skin's colour; the shop shows a looping preview. | `src/engine/WarpIn.java` |
+| Ghost Trail | 55 coins / 30 diamonds | Fading copies of the ship follow it while it moves, in the selected skin's colour. Faster ship, stronger ghosts. While the Boost item is active, the trail surges (two extra ghosts and a brighter glow). Hidden while the ship is destroyed, on pause, game over and level clear. | `src/engine/GhostTrail.java` |
 
 ---
 
