@@ -134,9 +134,12 @@ public final class DrawManager {
         /** Currency collected in one run achievement icon**/
         Looter,
         /** Item used achievement icon. */
-		ItemCol
-
-
+		ItemCol,
+		/** Bouncing boss animation frames. */
+		MidBoss1,
+		MidBoss2,
+		FinalBoss1,
+		FinalBoss2
 	};
 
 	/**
@@ -184,8 +187,10 @@ public final class DrawManager {
 			spriteMap.put(SpriteType.Accuracytarget, new boolean[11][11]);
             spriteMap.put(SpriteType.Looter, new boolean[11][11]);
 			spriteMap.put(SpriteType.ItemCol, new boolean[12][12]);
-
-
+			spriteMap.put(SpriteType.MidBoss1, new boolean[16][10]);
+			spriteMap.put(SpriteType.MidBoss2, new boolean[16][10]);
+			spriteMap.put(SpriteType.FinalBoss1, new boolean[24][16]);
+			spriteMap.put(SpriteType.FinalBoss2, new boolean[24][16]);
 
 			fileManager.loadSprite(spriteMap);
 			logger.info("Finished loading the sprites.");
@@ -409,7 +414,7 @@ public final class DrawManager {
 	public void drawDiamondDrop(final DiamondDrop drop) {
 		MeteorManager.drawDiamond(backBufferGraphics, drop, fontRegular);
 	}
-	
+
 	/**
 	 * Draws the item drops on the field (Team CS - Item System). Drops have
 	 * no entry in the shared sprite file yet, so the item system draws
