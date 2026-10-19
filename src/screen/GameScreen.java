@@ -245,19 +245,19 @@ public class GameScreen extends Screen {
 	private LightningChain lightningChain;
 	/** Test switch: java -Dvfx.lightning=true turns it on without buying. */
 	private static final boolean LIGHTNING_ON = Boolean.getBoolean("vfx.lightning");
-	/** True when the player owns Lightning Chain (or the test switch is on). */
+	/** True when Lightning Chain is bought and switched on (or the test switch is on). */
 	private boolean lightningOn;
 	/** Glitch effect for low health. */
 	private GlitchEffect glitch;
 	/** Screen shake when an enemy is destroyed. */
 	private ScreenShake screenShake;
-	/** True if Comet Trail is owned. AUTHORED BY: VFX TEAM (Effection) */
+	/** True if Comet Trail is bought and switched on. AUTHORED BY: VFX TEAM (Effection) */
 	private boolean cometTrailOn;
 	/** Bonus meteor and its diamonds. AUTHORED BY: VFX TEAM (Effection) */
 	private MeteorManager meteors;
 	/** Points shown when enemies are destroyed. AUTHORED BY: VFX TEAM (Effection) */
 	private PointsEffect pointsEffect;
-	/** Ghost Trail ship effect, null if not owned. AUTHORED BY: VFX TEAM (Effection) */
+	/** Ghost Trail ship effect, null if not bought or switched off. AUTHORED BY: VFX TEAM (Effection) */
 	private engine.GhostTrail ghostTrail;
 	/** Diamonds earned this run but not yet cashed out; lost on death,
 	 * banked into DiamondManager only when the player cashes out. */
@@ -375,30 +375,23 @@ public class GameScreen extends Screen {
 		this.prevLives = this.lives;
 		this.lowHealthActive = false;
 		this.bullets = new HashSet<Bullet>();
-		this.cometTrailOn = engine.PurchaseManager.getInstance().isOwned(
-				shop.ShopCatalog.findById("effect_comet_trail"));
+		this.cometTrailOn = PurchaseManager.getInstance().isEffectOn("comet_trail"); // AUTHORED BY: VFX TEAM (Effection)
 		this.damageDim = new DamageDimEffect(900, 0.75f,
         new java.awt.Color(150, 0, 0));  //new update dim effect
 		GameEvents.subscribe(GameEvents.Type.PLAYER_HIT, this.damageDim);
 		this.lightningChain = new LightningChain(); // AUTHORED BY: VFX TEAM (Effection)
-		shop.ShopItem lightningItem = shop.ShopCatalog.findByRef(
-				shop.ShopCategory.EFFECT, "lightning_chain");
-		this.lightningOn = LIGHTNING_ON || (lightningItem != null
-				&& PurchaseManager.getInstance().isOwned(lightningItem));
+		this.lightningOn = LIGHTNING_ON || PurchaseManager.getInstance().isEffectOn("lightning_chain");   // Lightning Chain, on unless switched off in Customize.
 		GameEvents.subscribe(GameEvents.Type.PLAYER_HIT, this.lightningChain);
 		this.glitch = new GlitchEffect();
 		this.screenShake = new ScreenShake();
 		this.meteors = new MeteorManager(this.level, this.width, this.height,SEPARATION_LINE_HEIGHT);
 		this.pointsEffect = new PointsEffect(SEPARATION_LINE_HEIGHT);
-		// Warp In, on in every run unless switched off in Customize.
-		// AUTHORED BY: VFX TEAM (Effection)
+		// Warp In effect, null if not bought or switched off. AUTHORED BY: VFX TEAM (Effection) */
 		if (PurchaseManager.getInstance().isEffectOn("warp_in")) {
 			this.warpIn = new engine.WarpIn();
 			this.warpIn.startLevel(INPUT_DELAY);
 		}
-		// Ghost Trail, on in every run once bought. AUTHORED BY: VFX TEAM (Effection)
-		if (engine.PurchaseManager.getInstance().isOwned(
-				shop.ShopCatalog.findById("effect_ghost_trail")))
+		if (PurchaseManager.getInstance().isEffectOn("ghost_trail"))		// Ghost Trail, on unless switched off in Customize. AUTHORED BY: VFX TEAM (Effection)
 			this.ghostTrail = new engine.GhostTrail();
 		this.scoreBoostPopups = new ArrayList<long[]>(); // Item System (Team CS)
 		this.coins = new HashSet<Coin>();
