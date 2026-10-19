@@ -134,18 +134,12 @@ public final class DrawManager {
         /** Currency collected in one run achievement icon**/
         Looter,
         /** Item used achievement icon. */
-<<<<<<< HEAD
 		ItemCol,
 		/** Bouncing boss animation frames. */
 		MidBoss1,
 		MidBoss2,
 		FinalBoss1,
 		FinalBoss2
-=======
-		ItemCol
-
-
->>>>>>> 92f5301 (feat(records): add tiered achievements and fix unlock bugs (#170))
 	};
 
 	/**
@@ -193,15 +187,10 @@ public final class DrawManager {
 			spriteMap.put(SpriteType.Accuracytarget, new boolean[11][11]);
             spriteMap.put(SpriteType.Looter, new boolean[11][11]);
 			spriteMap.put(SpriteType.ItemCol, new boolean[12][12]);
-<<<<<<< HEAD
 			spriteMap.put(SpriteType.MidBoss1, new boolean[16][10]);
 			spriteMap.put(SpriteType.MidBoss2, new boolean[16][10]);
 			spriteMap.put(SpriteType.FinalBoss1, new boolean[24][16]);
 			spriteMap.put(SpriteType.FinalBoss2, new boolean[24][16]);
-=======
-
-
->>>>>>> 92f5301 (feat(records): add tiered achievements and fix unlock bugs (#170))
 
 			fileManager.loadSprite(spriteMap);
 			logger.info("Finished loading the sprites.");
