@@ -3,6 +3,8 @@ package screen;
 import engine.Cooldown;
 import engine.Core;
 import java.awt.event.KeyEvent;
+import engine.soundEngine.Sound;
+import engine.soundEngine.SoundManager;
 
 /**
  * Implements the settings screen.
@@ -14,10 +16,8 @@ public class SettingsScreen extends Screen {
 	private static final int SPACING = 30;
 	/** Cooldown for menu selection and volume changes. */
 	private final Cooldown selectionCooldown;
-	/** Current background music volume. */
-	private int bgmVolume = 50;
-	/** Current sound effects volume. */
-	private int sfxVolume = 50;
+	/** get volume from soundManager */
+	private final SoundManager soundManager = SoundManager.getInstance();
 	/** Current selected menu item. */
 	private int currentMenuItem = 0;
 
@@ -38,6 +38,22 @@ public class SettingsScreen extends Screen {
 		this.selectionCooldown.reset();
 	}
 
+	/** Returns the current volume as a percentage. */
+	private int getVolumePercent(final Sound.Category category) {
+		return Math.round(this.soundManager.getVolume(category) * 100f);
+	}
+
+	/** Adjusts the selected category by the given percentage points. */
+	private void adjustSelectedVolume(final int delta) {
+		Sound.Category category = this.currentMenuItem == 0
+				? Sound.Category.BGM
+				: Sound.Category.SFX;
+
+		int percent = Math.max(0,
+				Math.min(100, getVolumePercent(category) + delta));
+
+		this.soundManager.setVolume(category, percent / 100f);
+	}
 	/**
 	 * Starts the action.
 	 *
@@ -69,15 +85,33 @@ public class SettingsScreen extends Screen {
 			}
 
 			if (this.inputManager.isKeyDown(KeyEvent.VK_LEFT)) {
-				if (currentMenuItem == 0) bgmVolume = Math.max(0, bgmVolume - 10);
-				else if (currentMenuItem == 1) sfxVolume = Math.max(0, sfxVolume - 10);
+				adjustSelectedVolume(-10);
 				this.selectionCooldown.reset();
 			} else if (this.inputManager.isKeyDown(KeyEvent.VK_RIGHT)) {
-				if (currentMenuItem == 0) bgmVolume = Math.min(100, bgmVolume + 10);
-				else if (currentMenuItem == 1) sfxVolume = Math.min(100, sfxVolume + 10);
+				adjustSelectedVolume(10);
 				this.selectionCooldown.reset();
 			}
 		}
+
+		if (this.inputManager.isMouseMoved()) {
+			int mouseY = this.inputManager.getMouseY();
+			for (int row = 0; row < 2; row++)
+				if (this.drawManager.isOnMenuRow(rowBaseline(row), SPACING,
+						mouseY))
+					currentMenuItem = row;
+		}
+	}
+
+	/**
+	 * Baseline of a row, counted from the first volume row. Drawing and
+	 * mouse hover both use this, so they cannot drift apart.
+	 *
+	 * @param row
+	 *            Row index, from the top.
+	 * @return Baseline of the row's text.
+	 */
+	private int rowBaseline(final int row) {
+		return this.getHeight() / 3 + SPACING * row;
 	}
 
 	/**
@@ -87,29 +121,29 @@ public class SettingsScreen extends Screen {
 		this.drawManager.initDrawing(this);
 		this.drawManager.drawScreenTitle(
 				this, MenuItem.SETTINGS.getTitle());
-		int baseY = this.getHeight() / 3;
-		String bgmStr = "BGM Volume: < " + bgmVolume + "% >";
-		String sfxStr = "SFX Volume: < " + sfxVolume + "% >";
 
-        String m0 = (currentMenuItem == 0 ? "> " + bgmStr + " <" : bgmStr);
-        String m1 = (currentMenuItem == 1 ? "> " + sfxStr + " <" : sfxStr);
+		int bgmVolume = getVolumePercent(Sound.Category.BGM);
+		int sfxVolume = getVolumePercent(Sound.Category.SFX);
+
+		String bgmStr = "BGM Volume: " + bgmVolume + "%";
+		String sfxStr = "SFX Volume: " + sfxVolume + "%";
 		String m2 = "Key Bindings";
 
-		this.drawManager.drawMenuRow(this, m0, baseY,
+		this.drawManager.drawMenuRow(this, bgmStr, rowBaseline(0),
 				currentMenuItem == 0);
-		this.drawManager.drawMenuRow(this, m1, baseY + SPACING,
+		this.drawManager.drawMenuRow(this, sfxStr, rowBaseline(1),
 				currentMenuItem == 1);
 
-		this.drawManager.drawMenuRow(this, m2, baseY + SPACING * 3, false);
+		this.drawManager.drawMenuRow(this, m2, rowBaseline(3), false);
 
 		this.drawManager.drawMenuRow(this, "- Move Left: A / Left Arrow -",
-				baseY + SPACING * 4, false);
+				rowBaseline(4), false);
 		this.drawManager.drawMenuRow(this, "- Move Right: D / Right Arrow -",
-				baseY + SPACING * 5, false);
+				rowBaseline(5), false);
 		this.drawManager.drawMenuRow(this, "- Shoot: Space -",
-				baseY + SPACING * 6, false);
+				rowBaseline(6), false);
 		this.drawManager.drawMenuRow(this, "- Back: ESC -",
-				baseY + SPACING * 7, false);
+				rowBaseline(7), false);
 		this.drawManager.drawKeyHints(this, "arrows adjust, esc back");
 
 		this.drawManager.completeDrawing(this);
