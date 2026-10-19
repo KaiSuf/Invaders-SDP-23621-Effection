@@ -62,7 +62,6 @@ public final class GhostTrail {
 	/** Shop preview: how far the ship slides each way, in pixels. */
 	private static final int PREVIEW_SWING = 36;
 
-<<<<<<< HEAD
 	/** Past ship x positions, a ring buffer (no new objects per frame). */
 	private final int[] historyX = new int[HISTORY];
 	/** Past ship y positions, same slots as {@link #historyX}. */
@@ -77,10 +76,6 @@ public final class GhostTrail {
 	private double glow;
 	/** How far the surge has faded in (0 = off, 1 = full). */
 	private double surgeLevel;
-=======
-	/** Past ship positions, newest first: {x, y, colour as RGB}. */
-	private final ArrayDeque<int[]> history = new ArrayDeque<int[]>();
->>>>>>> 581ddbf (feat(vfx): colour Ghost Trail with the skin)
 
 	/**
 	 * Remembers where the ship is this frame, and its colour. Call once
@@ -94,18 +89,12 @@ public final class GhostTrail {
 	 *            Ship colour this frame (skin colour).
 	 */
 	public void record(final int x, final int y, final Color color) {
-<<<<<<< HEAD
 		this.newest = (this.newest + 1) % HISTORY;
 		this.historyX[this.newest] = x;
 		this.historyY[this.newest] = y;
 		this.historyColor[this.newest] = color.getRGB();
 		if (this.count < HISTORY)
 			this.count++;
-=======
-		this.history.addFirst(new int[] { x, y, color.getRGB() });
-		if (this.history.size() > HISTORY)
-			this.history.removeLast();
->>>>>>> 581ddbf (feat(vfx): colour Ghost Trail with the skin)
 	}
 
 	/** @return True if the ship moved enough lately to show ghosts. */
@@ -148,7 +137,6 @@ public final class GhostTrail {
 	 *            Player ship.
 	 * @param shipColor
 	 *            Skin colour of the ship this frame; ghosts keep it.
-<<<<<<< HEAD
 	 * @param surging
 	 *            True while the ship is boosted.
 	 */
@@ -164,12 +152,6 @@ public final class GhostTrail {
 		double step = 1.0 / SURGE_RAMP_FRAMES;
 		this.surgeLevel = surging ? Math.min(1, this.surgeLevel + step)
 				: Math.max(0, this.surgeLevel - step);
-=======
-	 */
-	public void draw(final DrawManager drawManager, final Ship ship,
-			final Color shipColor) {
-		record(ship.getPositionX(), ship.getPositionY(), shipColor);
->>>>>>> 581ddbf (feat(vfx): colour Ghost Trail with the skin)
 		if (!isMoving())
 			return;
 		double strength = speedStrength();
@@ -180,7 +162,6 @@ public final class GhostTrail {
 				drawGhost(drawManager, ship, SURGE_FRAMES[k],
 						SURGE_ALPHA[k] * strength * this.surgeLevel);
 		// Farthest ghost first, so nearer ghosts are drawn on top.
-<<<<<<< HEAD
 		for (int k = GHOST_FRAMES.length - 1; k >= 0; k--)
 			drawGhost(drawManager, ship, GHOST_FRAMES[k],
 					GHOST_ALPHA[k] * strength);
@@ -231,17 +212,6 @@ public final class GhostTrail {
 				- this.historyX[older]) / (double) SPEED_FRAMES;
 		return MIN_STRENGTH
 				+ (1 - MIN_STRENGTH) * Math.min(1, speed / FULL_SPEED);
-=======
-		for (int k = GHOST_FRAMES.length - 1; k >= 0; k--) {
-			int[] pos = positionFramesAgo(GHOST_FRAMES[k]);
-			if (pos == null)
-				continue;
-			Color base = new Color(pos[2]);
-			drawManager.drawSprite(ship.getSpriteType(), pos[0], pos[1],
-					new Color(base.getRed(), base.getGreen(),
-							base.getBlue(), GHOST_ALPHA[k]));
-		}
->>>>>>> 581ddbf (feat(vfx): colour Ghost Trail with the skin)
 	}
 
 	/**
