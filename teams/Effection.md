@@ -195,6 +195,14 @@ Provide reusable VFX components and libraries that can be easily accessed and us
 `PLAYER_SHOOT`, `ENEMY_SHOOT`, `PLAYER_HIT`, `ENEMY_HIT`, `ENEMY_DESTROYED`, `PLAYER_DESTROYED`, `LEVEL_COMPLETED`, `GAME_OVER`, and `STAGE_STARTED`.
 ```
 
+### 4. Shop Effects
+
+Cosmetic effects players can buy in the shop's **EFFECTS** tab. Bought once, on in every run. Look only, no gameplay change.
+
+| Effect | Price | What it does | Code |
+|--------|-------|--------------|------|
+| Ghost Trail | 55 coins / 30 diamonds | Fading copies of the ship follow it while it moves, in the selected skin's colour. Faster ship, stronger ghosts. While the Boost item is active, the trail surges (two extra ghosts and a brighter glow). Hidden while the ship is destroyed, on pause, game over and level clear. | `src/engine/GhostTrail.java` |
+
 ---
 
 

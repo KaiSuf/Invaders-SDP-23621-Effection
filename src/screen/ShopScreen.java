@@ -927,6 +927,13 @@ public class ShopScreen extends Screen {
 			case "comet_trail":
 				drawCometTrailPreview(centerX, top);
 				break;
+			case "ghost_trail":
+				engine.GhostTrail.drawPreview(this.drawManager,
+						PurchaseManager.getInstance().getSelectedShip()
+								.getIdleSprite(),
+						PurchaseManager.getInstance().getSelectedSkin(),
+						centerX, top);
+				break;
 			case "lightning_chain":
 				drawLightningChainPreview(centerX, top);
 				break;

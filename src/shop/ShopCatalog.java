@@ -107,6 +107,11 @@ public final class ShopCatalog {
 		items.add(effect("comet_trail", "Comet Trail", "Your shots leave"
 				+ " a blazing orange tail. Look only.", 50, 25));
 
+		// Effects (VFX team, Effection): bought once, either currency.
+		// Each effect PR adds its own line here with effect(...).
+		items.add(effect("ghost_trail", "Ghost Trail", "Fading copies of your"
+				+ " ship follow it while it moves. Look only.", 55, 30));
+		
 		ITEMS = Collections.unmodifiableList(items);
 	}
 
