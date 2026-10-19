@@ -163,6 +163,8 @@ public class GameScreen extends Screen {
 	private EnemyShipFormation enemyShipFormation;
 	/** Player's ship. */
 	private Ship ship;
+	/** Warp In effect, null if not bought. AUTHORED BY: VFX TEAM (Effection) */
+	private engine.WarpIn warpIn;
 	/** Bonus enemy ship that appears sometimes. */
 	private EnemyShip enemyShipSpecial;
 	/** Minimum time between bonus ship appearances. */
@@ -388,6 +390,12 @@ public class GameScreen extends Screen {
 		this.screenShake = new ScreenShake();
 		this.meteors = new MeteorManager(this.level, this.width, this.height,SEPARATION_LINE_HEIGHT);
 		this.pointsEffect = new PointsEffect(SEPARATION_LINE_HEIGHT);
+		// Warp In, on in every run unless switched off in Customize.
+		// AUTHORED BY: VFX TEAM (Effection)
+		if (PurchaseManager.getInstance().isEffectOn("warp_in")) {
+			this.warpIn = new engine.WarpIn();
+			this.warpIn.startLevel(INPUT_DELAY);
+		}
 		// Ghost Trail, on in every run once bought. AUTHORED BY: VFX TEAM (Effection)
 		if (engine.PurchaseManager.getInstance().isOwned(
 				shop.ShopCatalog.findById("effect_ghost_trail")))
@@ -837,6 +845,15 @@ public class GameScreen extends Screen {
 			// Ship, enemies, bullets and falling coins are hidden while
 			// paused, so the pause menu isn't cluttered by the frozen
 			// battlefield behind it - only the top HUD stays visible.
+			// Warp In draws the ship itself while it beams in. AUTHORED BY: VFX TEAM (Effection)
+			if (this.warpIn == null|| !this.warpIn.update(this.ship, this.lives > 0))
+				drawManager.drawEntity(this.ship, this.ship.getPositionX(),
+						this.ship.getPositionY());
+			drawManager.drawWarpIn(this.warpIn, this.ship,
+					this.skin.colorAt(System.currentTimeMillis()),
+					SEPARATION_LINE_HEIGHT);
+					if (this.warpIn != null && this.warpIn.takeImpact())
+						this.screenShake.trigger();
 			// Ghost Trail behind the ship, gone once the level ends (game
    			// over or level clear). AUTHORED BY: VFX TEAM (Effection)
 			if (this.ghostTrail != null && this.levelFinished)

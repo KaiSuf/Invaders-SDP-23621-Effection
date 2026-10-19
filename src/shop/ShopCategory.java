@@ -21,6 +21,7 @@ public enum ShopCategory {
 	 * can be on at once.
 	 */
 	UPGRADE("Upgrade"),
+	
 	/**
 	 * Visual effect (VFX team, Effection). Bought once, on in every run
 	 * once bought. Look only, no stat change.
