@@ -544,7 +544,6 @@ public class GameScreen extends Screen {
 				this.enemyShipFormation.shoot(this.bullets);
 				this.meteors.trySpawn(this.enemyShipFormation, this.ship); // VFX meteor needs a normal formation.
 			}
-			this.lightningChain.update(); // AUTHORED BY: VFX TEAM (Effection)
 			updateLowHealthEffect();
 			this.ship.setBlinking(this.lowHealthActive);
 		}
@@ -557,6 +556,7 @@ public class GameScreen extends Screen {
 		showScoreBoostPopups(); // Item System (Team CS)
 		cleanBullets();
 		updateParticles(); // AUTHORED BY: VFX TEAM (Effection)
+		this.lightningChain.update();
 		updateCoins();
 		this.pendingDiamonds += this.meteors.update(this.ship, this.lives > 0); // VFX TEAM (Effection): updates the meteor and its diamonds, returns the diamonds to be added to pending
 		handleItemEvents();
