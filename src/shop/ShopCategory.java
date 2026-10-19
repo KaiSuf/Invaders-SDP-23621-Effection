@@ -16,16 +16,16 @@ public enum ShopCategory {
 	/** Cosmetic recolour of the ship (Skin team). Bought once, one used at a time. */
 	SKIN("Cosmetic skin"),
 	/**
-	 * Item System (Team CS) equipped item. Bought several times to level it
-	 * up, on as soon as it is bought, switched on/off in Customize. Any
-	 * number of upgrades can be on at once.
+	 * Item System (Team CS) equipped item. Bought once (no levels), on as
+	 * soon as it is bought, switched on/off in Customize. Only one upgrade
+	 * can be on at once.
 	 */
 	UPGRADE("Upgrade"),
 	/**
-	 * Bullet effect (VFX team, Effection). Bought once, on in every run
+	 * Visual effect (VFX team, Effection). Bought once, on in every run
 	 * once bought. Look only, no stat change.
 	 */
-	EFFECT("Bullet effect");
+	EFFECT("Effect");
 
 	/** Label shown in the shop's detail panel. */
 	private final String label;
