@@ -104,6 +104,8 @@ public final class ShopCatalog {
 		items.add(effect("lightning_chain", "Lightning Chain", "Kills chain"
 				+ " lightning to nearby enemies. Streaks turn it violet,"
 				+ " then gold. Look only.", 60, 30));
+		items.add(effect("comet_trail", "Comet Trail", "Your shots leave"
+				+ " a blazing orange tail. Look only.", 50, 25));
 
 		ITEMS = Collections.unmodifiableList(items);
 	}

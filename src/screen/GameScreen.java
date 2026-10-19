@@ -249,6 +249,8 @@ public class GameScreen extends Screen {
 	private GlitchEffect glitch;
 	/** Screen shake when an enemy is destroyed. */
 	private ScreenShake screenShake;
+	/** True if Comet Trail is owned. AUTHORED BY: VFX TEAM (Effection) */
+	private boolean cometTrailOn;
 	/** Bonus meteor and its diamonds. AUTHORED BY: VFX TEAM (Effection) */
 	private MeteorManager meteors;
 	/** Points shown when enemies are destroyed. AUTHORED BY: VFX TEAM (Effection) */
@@ -369,6 +371,8 @@ public class GameScreen extends Screen {
 		this.prevLives = this.lives;
 		this.lowHealthActive = false;
 		this.bullets = new HashSet<Bullet>();
+		this.cometTrailOn = engine.PurchaseManager.getInstance().isOwned(
+				shop.ShopCatalog.findById("effect_comet_trail"));
 		this.damageDim = new DamageDimEffect(900, 0.75f,
         new java.awt.Color(150, 0, 0));  //new update dim effect
 		GameEvents.subscribe(GameEvents.Type.PLAYER_HIT, this.damageDim);
@@ -844,13 +848,17 @@ if (this.midBoss != null) {
 				SEPARATION_LINE_HEIGHT);
 		drawManager.drawLightningChain(this.lightningChain);
 
-		for (Bullet bullet : this.bullets)
-			drawManager.drawEntity(bullet, bullet.getPositionX(),
-					bullet.getPositionY());
-
-		// Stop shake offset before full-screen dim.
-		drawManager.setWorldOffset(0, 0);
-		drawManager.drawDamageDim(this, this.damageDim);
+			for (Bullet bullet : this.bullets) {
+				// Comet trail, player bullets only. AUTHORED BY: VFX TEAM (Effection)
+				if (this.cometTrailOn && bullet.getSpeed() < 0)
+					drawManager.drawBulletTrail(bullet);
+				drawManager.drawEntity(bullet, bullet.getPositionX(),
+						bullet.getPositionY());
+			}
+			// Stop shake offset before full-screen dim.
+			drawManager.setWorldOffset(0, 0);
+			// Damage dim (under HUD, so score/lives stay bright). AUTHORED BY: VFX TEAM (Effection)
+			drawManager.drawDamageDim(this, this.damageDim);
 
 			// Coins are part of the game world, so they shake too.
 			drawManager.setWorldOffset(this.screenShake.getOffsetX(),
