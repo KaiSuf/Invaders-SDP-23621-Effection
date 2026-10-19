@@ -386,6 +386,7 @@ public class GameScreen extends Screen {
 		this.screenShake = new ScreenShake();
 		this.meteors = new MeteorManager(this.level, this.width, this.height,SEPARATION_LINE_HEIGHT);
 		this.pointsEffect = new PointsEffect(SEPARATION_LINE_HEIGHT);
+		this.scoreBoostPopups = new ArrayList<long[]>(); // Item System (Team CS)
 		// Warp In effect, null if not bought or switched off. AUTHORED BY: VFX TEAM (Effection) */
 		if (PurchaseManager.getInstance().isEffectOn("warp_in")) {
 			this.warpIn = new engine.WarpIn();
