@@ -14,6 +14,7 @@ import shop.Currency;
 import shop.ShopCatalog;
 import shop.ShopCategory;
 import shop.ShopItem;
+import shop.ShapeSkin;
 import shop.Skin;
 
 /**
@@ -29,10 +30,12 @@ import shop.Skin;
  */
 public class ShipSelectScreen extends Screen {
 
-	/** The three things that can be chosen. */
+	/** Ship, look, colour, upgrade and effect choices. */
 	private enum Row {
 		/** Ship type. */
 		SHIP("Ship"),
+		/** Look (shape) of the ship, from the three of its type (A1). */
+		SHAPE("Look"),
 		/** Ship colour. */
 		SKIN("Skin"),
 		/** Item team upgrades, browsed and switched on/off one by one. */
@@ -56,7 +59,7 @@ public class ShipSelectScreen extends Screen {
 	/** Height of one row box. */
 	private static final int ROW_HEIGHT = 30;
 	/** Distance between two rows. */
-	private static final int ROW_SPACING = 38;
+	private static final int ROW_SPACING = 34;
 	/** Width of the clickable arrow at each end of a row. */
 	private static final int ARROW_WIDTH = 28;
 	/** Size of one sprite pixel in the big preview. */
@@ -66,7 +69,7 @@ public class ShipSelectScreen extends Screen {
 	/** Colour of unselected row borders. */
 	private static final Color BORDER = new Color(70, 70, 70);
 	/** Height of the preview band above the rows (ship and effects). */
-	private static final int PREVIEW_HEIGHT = 104;
+	private static final int PREVIEW_HEIGHT = 88;
 	/** Size of one sprite pixel of the ship while effects play. */
 	private static final int EFFECT_PREVIEW_PIXEL = 4;
 	/** Highest speed and fire rate among the ships, for the stat bars. */
@@ -94,6 +97,8 @@ public class ShipSelectScreen extends Screen {
 	private Row row = Row.SHIP;
 	/** Choice shown in each row, which may be locked. */
 	private int shipIndex;
+	/** 0 is the ship's original look, 1 and up its shape skins. */
+	private int shapeIndex;
 	private int skinIndex;
 	private int upgradeIndex;
 	private int effectIndex;
@@ -120,6 +125,7 @@ public class ShipSelectScreen extends Screen {
 		// Open on the ship chosen last time instead of always the first one.
 		this.shipIndex = Core.getSelectedShipType().ordinal();
 		this.skinIndex = loadout.getSelectedSkin().ordinal();
+		syncShapeIndex();
 		// Start on the first upgrade the player owns, if any.
 		for (int i = this.availableUpgrades.size() - 1; i >= 0; i--)
 			if (loadout.isOwned(this.availableUpgrades.get(i)))
@@ -233,27 +239,37 @@ public class ShipSelectScreen extends Screen {
 	private void change(final Row which, final int step) {
 		PurchaseManager loadout = PurchaseManager.getInstance();
 		switch (which) {
-		case SHIP:
-			this.shipIndex = Math.floorMod(this.shipIndex + step,
-					this.availableShips.length);
-			ShipType ship = this.availableShips[this.shipIndex];
-			if (loadout.isShipUnlocked(ship)) {
-				// Remember the choice for the menu and the game (Mantis).
-				Core.setSelectedShipType(ship);
-				this.logger.info("Ship selected: " + ship);
-			}
-			break;
-		case SKIN:
-			this.skinIndex = Math.floorMod(this.skinIndex + step,
-					this.availableSkins.length);
-			loadout.selectSkin(this.availableSkins[this.skinIndex]);
-			break;
-		case UPGRADE:
-			// Browsing only: upgrades are switched with space or a click.
-			if (!this.availableUpgrades.isEmpty())
-				this.upgradeIndex = Math.floorMod(this.upgradeIndex + step,
-						this.availableUpgrades.size());
-			break;
+			case SHIP:
+				this.shipIndex = Math.floorMod(this.shipIndex + step,
+						this.availableShips.length);
+				ShipType ship = this.availableShips[this.shipIndex];
+				if (loadout.isShipUnlocked(ship)) {
+					// Remember the choice for the menu and the game (Mantis).
+					Core.setSelectedShipType(ship);
+					this.logger.info("Ship selected: " + ship);
+				}
+				// Each ship has its own looks: show the one it wears.
+				syncShapeIndex();
+				break;
+			case SHAPE:
+				int looks = browsableShapes().size() + 1;
+				this.shapeIndex = Math.floorMod(this.shapeIndex + step, looks);
+				if (loadout.selectShape(this.availableShips[this.shipIndex],
+						browsedShape()))
+					this.logger.info("Ship look selected: " + (browsedShape()
+							== null ? "original" : browsedShape().name()));
+				break;
+			case SKIN:
+				this.skinIndex = Math.floorMod(this.skinIndex + step,
+						this.availableSkins.length);
+				loadout.selectSkin(this.availableSkins[this.skinIndex]);
+				break;
+			case UPGRADE:
+				// Browsing only: upgrades are switched with space or a click.
+				if (!this.availableUpgrades.isEmpty())
+					this.upgradeIndex = Math.floorMod(this.upgradeIndex + step,
+							this.availableUpgrades.size());
+				break;
 		default:
 			// Browsing only: effects are switched with space or a click.
 			if (!this.availableEffects.isEmpty())
@@ -261,6 +277,26 @@ public class ShipSelectScreen extends Screen {
 						this.availableEffects.size());
 			break;
 		}
+	}
+
+	/** @return Looks of the browsed ship, not counting its original one. */
+	private List<ShapeSkin> browsableShapes() {
+		return ShapeSkin.forShip(this.availableShips[this.shipIndex]);
+	}
+
+	/** @return Look shown in the look row, or null for the original one. */
+	private ShapeSkin browsedShape() {
+		List<ShapeSkin> shapes = browsableShapes();
+		return this.shapeIndex <= 0 || this.shapeIndex > shapes.size()
+				? null : shapes.get(this.shapeIndex - 1);
+	}
+
+	/** Moves the look row to the look the browsed ship wears. */
+	private void syncShapeIndex() {
+		ShapeSkin worn = PurchaseManager.getInstance().getSelectedShape(
+				this.availableShips[this.shipIndex]);
+		this.shapeIndex = worn == null ? 0
+				: browsableShapes().indexOf(worn) + 1;
 	}
 
 	/** Switches the browsed upgrade on or off, if it is owned. */
@@ -295,12 +331,15 @@ public class ShipSelectScreen extends Screen {
 	private boolean isUnlocked(final Row which) {
 		PurchaseManager loadout = PurchaseManager.getInstance();
 		switch (which) {
-		case SHIP:
-			return loadout.isShipUnlocked(this.availableShips[this.shipIndex]);
-		case SKIN:
-			return loadout.isSkinUnlocked(this.availableSkins[this.skinIndex]);
-		case UPGRADE:
-			return loadout.isOwned(browsedUpgrade());
+			case SHIP:
+				return loadout.isShipUnlocked(this.availableShips[this.shipIndex]);
+			case SHAPE:
+				return browsedShape() == null
+						|| loadout.isShapeUnlocked(browsedShape());
+			case SKIN:
+				return loadout.isSkinUnlocked(this.availableSkins[this.skinIndex]);
+			case UPGRADE:
+				return loadout.isOwned(browsedUpgrade());
 		default:
 			// No effects sold yet: nothing to unlock.
 			return browsedEffect() == null
@@ -310,23 +349,25 @@ public class ShipSelectScreen extends Screen {
 
 	private String choiceName(final Row which) {
 		switch (which) {
-		case SHIP:
-			return ShopCatalog.shipName(this.availableShips[this.shipIndex]);
-		case SKIN:
-			return this.availableSkins[this.skinIndex].getDisplayName();
-		case EFFECT:
-			// ON / OFF is drawn as a tag at the end of the row.
-			ShopItem effect = browsedEffect();
-			return effect == null ? "None" : effect.getName();
-		default:
-			ShopItem upgrade = browsedUpgrade();
-			if (upgrade == null)
-				return "None";
-			PurchaseManager loadout = PurchaseManager.getInstance();
-			if (!loadout.isOwned(upgrade))
-				return upgrade.getName();
-			return upgrade.getName()
-					+ (loadout.isUpgradeOn(upgrade.getRef()) ? " ON" : " OFF");
+			case SHIP:
+				return ShopCatalog.shipName(this.availableShips[this.shipIndex]);
+			case SHAPE:
+				return browsedShape() == null ? "Original"
+						: browsedShape().getDisplayName();
+			case SKIN:
+				return this.availableSkins[this.skinIndex].getDisplayName();
+			case EFFECT:
+				ShopItem effect = browsedEffect();
+				return effect == null ? "None" : effect.getName();
+			default:
+				ShopItem upgrade = browsedUpgrade();
+				if (upgrade == null)
+					return "None";
+				PurchaseManager loadout = PurchaseManager.getInstance();
+				if (!loadout.isOwned(upgrade))
+					return upgrade.getName();
+				return upgrade.getName()
+						+ (loadout.isUpgradeOn(upgrade.getRef()) ? " ON" : " OFF");
 		}
 	}
 
@@ -337,14 +378,17 @@ public class ShipSelectScreen extends Screen {
 	 */
 	private ShopItem shopEntry(final Row which) {
 		switch (which) {
-		case SHIP:
-			return ShopCatalog.findByRef(ShopCategory.SHIP,
-					this.availableShips[this.shipIndex].name());
-		case SKIN:
-			return ShopCatalog.findByRef(ShopCategory.SKIN,
-					this.availableSkins[this.skinIndex].name());
-		case UPGRADE:
-			return browsedUpgrade();
+			case SHIP:
+				return ShopCatalog.findByRef(ShopCategory.SHIP,
+						this.availableShips[this.shipIndex].name());
+			case SHAPE:
+				return browsedShape() == null ? null : ShopCatalog.findByRef(
+						ShopCategory.SHAPE, browsedShape().name());
+			case SKIN:
+				return ShopCatalog.findByRef(ShopCategory.SKIN,
+						this.availableSkins[this.skinIndex].name());
+			case UPGRADE:
+				return browsedUpgrade();
 		default:
 			return browsedEffect();
 		}
@@ -391,8 +435,10 @@ public class ShipSelectScreen extends Screen {
 	private void drawPreview() {
 		ShipType type = this.availableShips[this.shipIndex];
 		Skin skin = this.availableSkins[this.skinIndex];
-		boolean dim = !isUnlocked(Row.SHIP) || !isUnlocked(Row.SKIN);
-		SpriteType sprite = type.getIdleSprite();
+		boolean dim = !isUnlocked(Row.SHIP) || !isUnlocked(Row.SHAPE)
+				|| !isUnlocked(Row.SKIN);
+		SpriteType sprite = browsedShape() == null ? type.getIdleSprite()
+				: browsedShape().getSprite();
 		int rowsTop = rowArea(Row.SHIP).y;
 
 		// Effects that are on, shown together. AUTHORED BY: VFX TEAM (Effection)
@@ -634,7 +680,7 @@ public class ShipSelectScreen extends Screen {
 		Color arrowColor = active ? accent : Color.GRAY;
 		drawManager.drawRegularString("<", area.x + 10, baseline, arrowColor);
 		drawManager.drawRegularString(">", area.x + area.width - 10
-				- drawManager.getRegularStringWidth(">"), baseline,
+						- drawManager.getRegularStringWidth(">"), baseline,
 				arrowColor);
 		drawManager.drawSmallString(which.label.toUpperCase(),
 				area.x + ARROW_WIDTH + 4, area.y + 18, Color.GRAY);
@@ -647,7 +693,7 @@ public class ShipSelectScreen extends Screen {
 			return;
 		}
 		drawManager.drawRegularString(name, area.x + area.width / 2
-				- drawManager.getRegularStringWidth(name) / 2 + 16, baseline,
+						- drawManager.getRegularStringWidth(name) / 2 + 16, baseline,
 				nameColor);
 	}
 
@@ -758,7 +804,7 @@ public class ShipSelectScreen extends Screen {
 				&& this.availableSkins[this.skinIndex].isLimited()) {
 			String tag = "LIMITED EDITION";
 			drawManager.drawSmallString(tag, this.width / 2
-					- drawManager.getSmallStringWidth(tag) / 2,
+							- drawManager.getSmallStringWidth(tag) / 2,
 					y - lineHeight - 4, new Color(255, 120, 200));
 		}
 		status = status.toUpperCase();
@@ -773,7 +819,7 @@ public class ShipSelectScreen extends Screen {
 				for (String line : wrap(upgrade.getDescription().toUpperCase(),
 						this.width - MARGIN * 2)) {
 					drawManager.drawSmallString(line, this.width / 2
-							- drawManager.getSmallStringWidth(line) / 2,
+									- drawManager.getSmallStringWidth(line) / 2,
 							lineY, Color.GRAY);
 					lineY += lineHeight;
 				}
@@ -802,7 +848,7 @@ public class ShipSelectScreen extends Screen {
 	}
 
 	private void drawStat(final String label, final double ratio,
-			final String value, final int baseline) {
+						  final String value, final int baseline) {
 		int barLeft = MARGIN + 120;
 		int barWidth = this.width - MARGIN * 2 - 120 - 40;
 		drawManager.drawSmallString(label, MARGIN + 4, baseline, Color.GRAY);
